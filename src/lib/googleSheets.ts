@@ -41,6 +41,7 @@ export async function fetchSheetData(url: string) {
     const parsed = Papa.parse(csvText, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => header.trim(),
     });
 
     return parsed.data as Record<string, string>[]; // Array of row objects
