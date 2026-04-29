@@ -37,6 +37,10 @@ export async function fetchSheetData(url: string) {
 
     const csvText = await response.text();
     
+    if (csvText.trim().toLowerCase().startsWith('<!doctype html>') || csvText.includes('<html')) {
+      throw new Error('This Google Sheet is PRIVATE. Please click "Share" in Google Sheets and change it to "Anyone with the link can view".');
+    }
+    
     // Parse CSV to JSON
     const parsed = Papa.parse(csvText, {
       header: true,

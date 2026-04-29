@@ -51,17 +51,23 @@ export async function POST(request: Request) {
         for (let i = 0; i < rows.length; i += chunkSize) {
           const chunk = rows.slice(i, i + chunkSize);
           
-          const promises = chunk.map(async (row) => {
-            const class_id = getColumnValue(row, ['Live Class ID', 'Class ID', 'id', 'class id']);
-            if (!class_id) return null; // Skip empty rows without an ID
+          const promises = chunk.map(async (row, index) => {
+            let class_id = getColumnValue(row, ['Live Class ID', 'Class ID', 'id', 'class id', 'ClassId', 'Live Class Id']);
+            
+            // NEVER skip a row. If it has no ID, make one up using the row number and date so it still imports.
+            if (!class_id) {
+               const rowString = Object.values(row).join('').trim();
+               if (!rowString) return null; // Only skip if the ENTIRE row is completely blank
+               class_id = `missing-id-${Date.now()}-${i + index}`;
+            }
 
-            const date = getColumnValue(row, ['Date']);
-            const subject = getColumnValue(row, ['Subject']);
-            const chapter = getColumnValue(row, ['Chapter/Topic Name', 'Chapter', 'Topic Name', 'Topic']);
-            const teacher = getColumnValue(row, ['Teacher', 'Instructor']);
-            const batch = getColumnValue(row, ['Batch Name', 'Batch']);
-            const video_link = getColumnValue(row, ['Video Link', 'Video']);
-            const pdf_link = getColumnValue(row, ['PDF Link', 'PDF']);
+            const date = getColumnValue(row, ['Date', 'date', 'Time', 'Day']);
+            const subject = getColumnValue(row, ['Subject', 'subject', 'Sub']);
+            const chapter = getColumnValue(row, ['Chapter/Topic Name', 'Chapter', 'Topic Name', 'Topic', 'Title', 'Class Name']);
+            const teacher = getColumnValue(row, ['Teacher', 'Instructor', 'Tutor']);
+            const batch = getColumnValue(row, ['Batch Name', 'Batch', 'Program']);
+            const video_link = getColumnValue(row, ['Video Link', 'Video', 'Class Link', 'Link']);
+            const pdf_link = getColumnValue(row, ['PDF Link', 'PDF', 'Pdf', 'Slide Link', 'Note']);
             const uploader = getColumnValue(row, ['Uploader Name', 'Uploader', "Uploader's Name"]);
 
             const [video_status, pdf_status] = await Promise.all([
