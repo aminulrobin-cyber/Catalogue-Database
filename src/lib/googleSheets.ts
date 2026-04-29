@@ -26,8 +26,12 @@ export async function fetchSheetData(url: string) {
     throw new Error('Invalid Google Sheet URL');
   }
 
-  // Construct CSV export URL
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+  // Extract the gid (tab ID) if it exists in the URL
+  const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
+  const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+
+  // Construct CSV export URL pointing specifically to that tab
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv${gidParam}`;
 
   try {
     const response = await fetch(csvUrl);
