@@ -70,13 +70,10 @@ export async function POST(request: Request) {
             const pdf_link = getColumnValue(row, ['PDF Link', 'PDF', 'Pdf', 'Slide Link', 'Note']);
             const uploader = getColumnValue(row, ['Uploader Name', 'Uploader', "Uploader's Name"]);
 
-            const [video_status, pdf_status] = await Promise.all([
-              validateLink(video_link),
-              validateLink(pdf_link)
-            ]);
-
-            const status = (video_status === 'ok' && pdf_status === 'ok') ? 'ok' : 'error';
-            if (status === 'error') errorCount++;
+            // REMOVED validateLink completely so it imports instantly without Vercel timing out!
+            const video_status = 'pending';
+            const pdf_status = 'pending';
+            const status = 'pending';
             
             let isDuplicate = false;
             const alreadyInDb = existingClassIds.has(class_id);
