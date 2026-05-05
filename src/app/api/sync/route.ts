@@ -67,7 +67,7 @@ export async function POST(request: Request) {
             const teacher = getColumnValue(row, ['Teacher', 'Instructor', 'Tutor']);
             const batch = getColumnValue(row, ['Batch Name', 'Batch', 'Program']);
             const video_link = getColumnValue(row, ['Video Link', 'Video', 'Class Link', 'Link']);
-            const pdf_link = getColumnValue(row, ['PDF Link', 'PDF', 'Pdf', 'Slide Link', 'Note']);
+            const pdf_link = getColumnValue(row, ['PDF Link', 'PDF', 'Pdf', 'PDf', 'Slide Link', 'Note']);
             const uploader = getColumnValue(row, ['Uploader Name', 'Uploader', "Uploader's Name"]);
 
             // REMOVED validateLink completely so it imports instantly without Vercel timing out!
