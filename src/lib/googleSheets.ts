@@ -86,7 +86,20 @@ export function parseSheetRows(rows: string[][]): SheetRow[] {
     .filter((entry): entry is SheetRow => Boolean(entry));
 }
 
-export async function fetchSheetValues(sheetId: string, range: string, apiKey: string): Promise<string[][]> {
+export function extractSheetId(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  // If it matches a URL pattern, return the ID. Otherwise, assume the input might already be the raw ID.
+  return match ? match[1] : url;
+}
+
+export async function fetchSheetValues(
+  sheetIdOrUrl: string, 
+  range: string = "A:ZZ", 
+  apiKey: string = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SHEETS_API_KEY || ""
+): Promise<string[][]> {
+  const sheetId = extractSheetId(sheetIdOrUrl) || sheetIdOrUrl;
+
   // Switched to the main spreadsheets endpoint to access cell-level formatting (hyperlinks)
   const url = new URL(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`
@@ -126,14 +139,12 @@ export async function fetchSheetValues(sheetId: string, range: string, apiKey: s
   });
 }
 
-export function extractSheetId(url: string): string | null {
-  if (!url) return null;
-  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  // If it matches a URL pattern, return the ID. Otherwise, assume the input might already be the raw ID.
-  return match ? match[1] : url;
-}
-
-export async function fetchSheetTitle(sheetId: string, apiKey: string): Promise<string> {
+export async function fetchSheetTitle(
+  sheetIdOrUrl: string, 
+  apiKey: string = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SHEETS_API_KEY || ""
+): Promise<string> {
+  const sheetId = extractSheetId(sheetIdOrUrl) || sheetIdOrUrl;
+  
   const url = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`);
   url.searchParams.set("fields", "properties.title");
   url.searchParams.set("key", apiKey);
@@ -147,9 +158,13 @@ export async function fetchSheetTitle(sheetId: string, apiKey: string): Promise<
   return body.properties?.title || "Untitled Sheet";
 }
 
-export async function fetchSheetData(sheetId: string, range: string, apiKey: string): Promise<Record<string, string>[]> {
+export async function fetchSheetData(
+  sheetIdOrUrl: string, 
+  range: string = "A:ZZ", 
+  apiKey: string = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SHEETS_API_KEY || ""
+): Promise<Record<string, string>[]> {
   // Use our existing values fetcher that cleanly handles formatting and hyperlinks
-  const values = await fetchSheetValues(sheetId, range, apiKey);
+  const values = await fetchSheetValues(sheetIdOrUrl, range, apiKey);
   if (!values || values.length === 0) return [];
 
   // Extract the top row as the column headers
