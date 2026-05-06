@@ -107,13 +107,15 @@ export async function fetchSheetValues(sheetId: string, range: string, apiKey: s
     throw new Error("Google Sheets API returned invalid payload.");
   }
 
-  const sheets = parsed.data.sheets;
-  if (!sheets || !sheets[0]?.data || !sheets[0].data[0]?.rowData) {
+  // Use deeply nested optional chaining to prevent strict TS index errors
+  const rowData = parsed.data.sheets?.[0]?.data?.[0]?.rowData;
+  
+  if (!rowData) {
     return [];
   }
 
   // Reconstruct the 2D array of strings, substituting the hyperlink URL if it exists
-  return sheets[0].data[0].rowData.map((row) => {
+  return rowData.map((row) => {
     if (!row.values) return [];
     
     return row.values.map((cell) => {
@@ -121,5 +123,47 @@ export async function fetchSheetValues(sheetId: string, range: string, apiKey: s
       // Prioritize the actual hyperlink URL. Fallback to the regular text if no link is embedded.
       return cell.hyperlink || cell.formattedValue || "";
     });
+  });
+}
+
+export function extractSheetId(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  // If it matches a URL pattern, return the ID. Otherwise, assume the input might already be the raw ID.
+  return match ? match[1] : url;
+}
+
+export async function fetchSheetTitle(sheetId: string, apiKey: string): Promise<string> {
+  const url = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`);
+  url.searchParams.set("fields", "properties.title");
+  url.searchParams.set("key", apiKey);
+
+  const response = await fetch(url.toString(), { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch title for sheet ${sheetId}`);
+  }
+
+  const body = await response.json();
+  return body.properties?.title || "Untitled Sheet";
+}
+
+export async function fetchSheetData(sheetId: string, range: string, apiKey: string): Promise<Record<string, string>[]> {
+  // Use our existing values fetcher that cleanly handles formatting and hyperlinks
+  const values = await fetchSheetValues(sheetId, range, apiKey);
+  if (!values || values.length === 0) return [];
+
+  // Extract the top row as the column headers
+  const headers = values[0];
+  const rows = values.slice(1);
+
+  // Map each subsequent row to an object using the header text as the keys
+  return rows.map((row) => {
+    const record: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      if (header) {
+        record[header] = row[index] || "";
+      }
+    });
+    return record;
   });
 }
