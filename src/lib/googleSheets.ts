@@ -1,6 +1,16 @@
 import { z } from "zod";
 
-import type { SheetRow } from "@/lib/types";
+export interface SheetRow {
+  date: Date;
+  subject: string;
+  topic: string;
+  teacher: string;
+  batch: string;
+  liveClassId: string;
+  videoUrl: string | null;
+  pdfUrl: string | null;
+  uploader: string;
+}
 
 // Updated schema to parse cell data which contains the hyperlinks
 const cellDataSchema = z.object({
