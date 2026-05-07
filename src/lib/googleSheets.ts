@@ -110,11 +110,18 @@ export async function fetchSheetValues(
 ): Promise<string[][]> {
   const sheetId = extractSheetId(sheetIdOrUrl) || sheetIdOrUrl;
 
+  // If a default tab name is configured and the range doesn't already specify one, prepend it
+  const defaultTab = process.env.DEFAULT_SHEET_TAB || '';
+  let finalRange = range;
+  if (defaultTab && !range.includes('!')) {
+    finalRange = `'${defaultTab}'!${range}`;
+  }
+
   // Switched to the main spreadsheets endpoint to access cell-level formatting (hyperlinks)
   const url = new URL(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`
   );
-  url.searchParams.set("ranges", range);
+  url.searchParams.set("ranges", finalRange);
   // Field mask to strictly fetch only the visible text and the hyperlink URL to keep the payload lightweight
   url.searchParams.set("fields", "sheets.data.rowData.values(formattedValue,hyperlink)");
   url.searchParams.set("key", apiKey);

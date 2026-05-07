@@ -4,8 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   RefreshCw, AlertCircle, CheckCircle2, HelpCircle, 
-  Search, ExternalLink, Loader2, FileText,
-  FilterX, ArrowLeft, Database
+  Search, ExternalLink, Loader2, FileText, Video, FileDown,
+  FilterX, ArrowLeft, Database, Clock, XCircle, Eye
 } from 'lucide-react';
 
 export default function SheetView({ sheetId }: { sheetId: string }) {
@@ -88,6 +88,16 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
   const uniqueTeachers = useMemo(() => Array.from(new Set(entries.map(e => e.teacher).filter(Boolean))), [entries]);
   const uniqueBatches = useMemo(() => Array.from(new Set(entries.map(e => e.batch).filter(Boolean))), [entries]);
 
+  // Status counts for the status bar
+  const statusCounts = useMemo(() => {
+    const ok = entries.filter(e => e.status === 'ok').length;
+    const pending = entries.filter(e => e.status === 'pending').length;
+    const issues = entries.filter(e => e.status === 'error').length;
+    const notChecked = entries.filter(e => !e.status || e.status === 'not_checked').length;
+    const duplicates = entries.filter(e => e.duplicate).length;
+    return { ok, pending, issues, notChecked, duplicates, total: entries.length };
+  }, [entries]);
+
   const filteredEntries = useMemo(() => {
     return entries.filter(e => {
       if (showErrorsOnly && e.status !== 'error') return false;
@@ -103,21 +113,64 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
   const StatusIcon = ({ status }: { status: string }) => {
     if (status === 'ok') return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
     if (status === 'error' || status === 'broken') return <AlertCircle className="w-4 h-4 text-brand-coral" />;
-    return <HelpCircle className="w-4 h-4 text-brand-sunrise" />;
+    if (status === 'pending') return <Clock className="w-4 h-4 text-brand-sunrise" />;
+    return <HelpCircle className="w-4 h-4 text-ink-muted" />;
   };
 
   const StatusBadge = ({ status }: { status: string }) => {
-    const isOk = status === 'ok';
-    const isPending = status === 'pending';
+    const label = status === 'ok' ? 'OK' 
+      : status === 'error' || status === 'broken' ? 'ISSUE' 
+      : status === 'pending' ? 'PENDING' 
+      : 'NOT CHECKED';
     
-    const bgClass = isOk ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-      : isPending ? 'bg-brand-sunrise-light text-brand-sunrise border-brand-sunrise/30' 
-      : 'bg-brand-coral-light text-brand-coral border-brand-coral/30';
+    const bgClass = status === 'ok' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+      : status === 'pending' ? 'bg-brand-sunrise-light text-brand-sunrise border-brand-sunrise/30' 
+      : status === 'error' || status === 'broken' ? 'bg-brand-coral-light text-brand-coral border-brand-coral/30'
+      : 'bg-gray-100 text-gray-500 border-gray-200';
 
     return (
       <span className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${bgClass}`}>
         <StatusIcon status={status} />
-        {status.toUpperCase()}
+        {label}
+      </span>
+    );
+  };
+
+  // Helper to render a clickable link or a "missing" indicator
+  const LinkCell = ({ url, type }: { url: string; type: 'video' | 'pdf' }) => {
+    const isValid = url && (url.startsWith('http://') || url.startsWith('https://'));
+    const Icon = type === 'video' ? Video : FileDown;
+    
+    if (isValid) {
+      return (
+        <a 
+          href={url} 
+          target="_blank" 
+          rel="noreferrer" 
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-brand-indigo-light text-brand-indigo hover:bg-brand-indigo hover:text-white font-bold text-xs transition-hover group"
+          title={url}
+        >
+          <Icon className="w-4 h-4" />
+          Open
+          <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100" />
+        </a>
+      );
+    }
+    
+    if (url) {
+      // Has text but not a valid URL (e.g. just "Link" text without a hyperlink behind it)
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-sunrise-light text-brand-sunrise text-xs font-bold">
+          <Clock className="w-3.5 h-3.5" />
+          Pending
+        </span>
+      );
+    }
+    
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-coral-light text-brand-coral text-xs font-bold">
+        <XCircle className="w-3.5 h-3.5" />
+        Missing
       </span>
     );
   };
@@ -161,24 +214,40 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
         </div>
       </header>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Classes', value: entries.length, icon: Database, color: 'text-brand-indigo', bg: 'bg-brand-indigo-light' },
-          { label: 'All OK', value: entries.filter(e => e.status === 'ok').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Errors Detected', value: entries.filter(e => e.status === 'error').length, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light' },
-          { label: 'Duplicates', value: entries.filter(e => e.duplicate).length, icon: FileText, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-6 shadow-ambient flex items-center gap-5">
-            <div className={`p-4 rounded-xl ${stat.bg}`}>
-              <stat.icon className={`w-7 h-7 ${stat.color}`} />
+      {/* ═══════════════ STATUS BAR ═══════════════ */}
+      <div className="bg-white rounded-2xl shadow-ambient overflow-hidden">
+        {/* Progress bar */}
+        <div className="h-2 flex w-full">
+          {statusCounts.total > 0 && (
+            <>
+              <div className="bg-emerald-500 transition-all duration-500" style={{ width: `${(statusCounts.ok / statusCounts.total) * 100}%` }} />
+              <div className="bg-amber-400 transition-all duration-500" style={{ width: `${(statusCounts.pending / statusCounts.total) * 100}%` }} />
+              <div className="bg-red-500 transition-all duration-500" style={{ width: `${(statusCounts.issues / statusCounts.total) * 100}%` }} />
+              <div className="bg-gray-300 transition-all duration-500" style={{ width: `${(statusCounts.notChecked / statusCounts.total) * 100}%` }} />
+            </>
+          )}
+        </div>
+        
+        {/* Status counts */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-ink-muted/10">
+          {[
+            { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo', bg: 'bg-brand-indigo-light' },
+            { label: 'All OK', value: statusCounts.ok, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Pending', value: statusCounts.pending, icon: Clock, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
+            { label: 'Issues', value: statusCounts.issues, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light' },
+            { label: 'Duplicates', value: statusCounts.duplicates, icon: FileText, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
+          ].map((stat, i) => (
+            <div key={i} className="flex items-center gap-4 px-5 py-5">
+              <div className={`p-3 rounded-xl ${stat.bg} shrink-0`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-ink-muted uppercase tracking-wider">{stat.label}</p>
+                <p className="text-2xl font-black text-ink mt-0.5">{stat.value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-ink-muted uppercase tracking-wider">{stat.label}</p>
-              <p className="text-3xl font-black text-ink mt-1">{stat.value}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Filters Area */}
@@ -210,7 +279,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
                 <div className={`absolute w-5 h-5 bg-white rounded-full transition-transform top-1 left-1 shadow-sm ${showErrorsOnly ? 'translate-x-5' : 'translate-x-0'}`}></div>
               </div>
               <span className="text-sm font-bold text-ink-secondary group-hover:text-ink transition-colors">
-                Show Only Errors
+                Show Only Issues
               </span>
             </label>
             
@@ -234,7 +303,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
           <select className="bg-surface border-0 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="ok">OK</option>
-            <option value="error">Error</option>
+            <option value="error">Issue</option>
             <option value="pending">Pending</option>
           </select>
         </div>
@@ -246,62 +315,60 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
           <table className="w-full text-left text-sm text-ink-secondary">
             <thead className="bg-surface border-b border-ink-muted/10 text-xs uppercase font-bold text-ink tracking-wider">
               <tr>
-                <th className="px-6 py-5">Class ID</th>
-                <th className="px-6 py-5">Subject</th>
-                <th className="px-6 py-5">Chapter/Topic</th>
-                <th className="px-6 py-5">Teacher</th>
-                <th className="px-6 py-5 text-center">Video</th>
-                <th className="px-6 py-5 text-center">PDF</th>
-                <th className="px-6 py-5 text-center">Overall</th>
+                <th className="px-5 py-5">Date</th>
+                <th className="px-5 py-5">Subject</th>
+                <th className="px-5 py-5">Chapter/Topic</th>
+                <th className="px-5 py-5">Teacher</th>
+                <th className="px-5 py-5">Class ID</th>
+                <th className="px-5 py-5 text-center">Video</th>
+                <th className="px-5 py-5 text-center">PDF</th>
+                <th className="px-5 py-5">Uploader</th>
+                <th className="px-5 py-5 text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-muted/10">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center text-ink-muted">
+                  <td colSpan={9} className="px-6 py-16 text-center text-ink-muted">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-indigo" />
                     <span className="font-semibold text-base">Loading class data...</span>
                   </td>
                 </tr>
               ) : filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center text-ink-muted font-semibold text-base">
-                    No classes found. Try syncing or checking your filters.
+                  <td colSpan={9} className="px-6 py-16 text-center text-ink-muted font-semibold text-base">
+                    No classes found. Try syncing or adjusting your filters.
                   </td>
                 </tr>
               ) : (
                 filteredEntries.map((entry, idx) => (
                   <tr key={idx} className="hover:bg-brand-indigo-light/30 transition-hover">
-                    <td className="px-6 py-4 font-bold text-ink whitespace-nowrap">
-                      {entry.class_id}
-                      {entry.duplicate && <span className="ml-3 inline-flex px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-sunrise-light text-brand-sunrise">DUP</span>}
+                    <td className="px-5 py-4 whitespace-nowrap font-medium text-ink">
+                      {entry.date || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium font-bangla">{entry.subject || '-'}</td>
-                    <td className="px-6 py-4 max-w-[250px] font-medium font-bangla" title={entry.chapter}>
+                    <td className="px-5 py-4 whitespace-nowrap font-semibold font-bangla text-ink">
+                      {entry.subject || '-'}
+                    </td>
+                    <td className="px-5 py-4 max-w-[280px] font-medium font-bangla" title={entry.chapter}>
                       <span className="line-clamp-2">{entry.chapter || '-'}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium font-bangla">{entry.teacher || '-'}</td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <StatusBadge status={entry.video_status} />
-                        {entry.video_link && (
-                          <a href={entry.video_link} target="_blank" rel="noreferrer" className="text-xs font-bold flex items-center gap-1.5 text-brand-indigo hover:text-brand-magenta transition-hover">
-                            Open <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        )}
-                      </div>
+                    <td className="px-5 py-4 whitespace-nowrap font-medium font-bangla">{entry.teacher || '-'}</td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <span className="font-mono text-xs font-bold text-brand-indigo bg-brand-indigo-light px-2.5 py-1.5 rounded-lg">
+                        {entry.class_id}
+                      </span>
+                      {entry.duplicate && <span className="ml-2 inline-flex px-2 py-0.5 rounded-md text-[10px] font-black bg-brand-sunrise-light text-brand-sunrise">DUP</span>}
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <StatusBadge status={entry.pdf_status} />
-                        {entry.pdf_link && (
-                          <a href={entry.pdf_link} target="_blank" rel="noreferrer" className="text-xs font-bold flex items-center gap-1.5 text-brand-indigo hover:text-brand-magenta transition-hover">
-                            Open <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        )}
-                      </div>
+                    <td className="px-5 py-4 text-center">
+                      <LinkCell url={entry.video_link} type="video" />
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-5 py-4 text-center">
+                      <LinkCell url={entry.pdf_link} type="pdf" />
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap font-medium text-ink-secondary">
+                      {entry.uploader || '-'}
+                    </td>
+                    <td className="px-5 py-4 text-center">
                       <StatusBadge status={entry.status} />
                     </td>
                   </tr>
@@ -311,7 +378,12 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
           </table>
         </div>
         <div className="px-6 py-4 border-t border-ink-muted/10 bg-surface text-sm font-bold text-ink-secondary flex justify-between items-center">
-          <span>Showing {filteredEntries.length} entries</span>
+          <span>Showing {filteredEntries.length} of {entries.length} entries</span>
+          {filteredEntries.length !== entries.length && (
+            <button onClick={clearFilters} className="text-brand-magenta hover:text-brand-magenta-dark text-xs font-bold transition-hover">
+              Clear Filters
+            </button>
+          )}
         </div>
       </div>
     </div>

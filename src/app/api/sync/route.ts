@@ -70,10 +70,12 @@ export async function POST(request: Request) {
             const pdf_link = getColumnValue(row, ['PDF Link', 'PDF', 'Pdf', 'PDf', 'Slide Link', 'Note']);
             const uploader = getColumnValue(row, ['Uploader Name', 'Uploader', "Uploader's Name"]);
 
-            // REMOVED validateLink completely so it imports instantly without Vercel timing out!
-            const video_status = 'pending';
-            const pdf_status = 'pending';
-            const status = 'pending';
+            // Compute status from actual link presence (hyperlinks are now extracted by the API)
+            const video_status = video_link && (video_link.startsWith('http://') || video_link.startsWith('https://')) ? 'ok' : video_link ? 'pending' : 'broken';
+            const pdf_status = pdf_link && (pdf_link.startsWith('http://') || pdf_link.startsWith('https://')) ? 'ok' : pdf_link ? 'pending' : 'broken';
+            const status = (video_status === 'ok' && pdf_status === 'ok') ? 'ok' 
+              : (video_status === 'broken' || pdf_status === 'broken') ? 'error' 
+              : 'pending';
             
             let isDuplicate = false;
             const alreadyInDb = existingClassIds.has(class_id);
