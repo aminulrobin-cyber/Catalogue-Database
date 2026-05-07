@@ -1,201 +1,73 @@
-import { z } from "zod";
-
-export interface SheetRow {
-  date: Date;
-  subject: string;
-  topic: string;
-  teacher: string;
-  batch: string;
-  liveClassId: string;
-  videoUrl: string | null;
-  pdfUrl: string | null;
-  uploader: string;
-}
-
-// Updated schema to parse cell data which contains the hyperlinks
-const cellDataSchema = z.object({
-  formattedValue: z.string().optional(),
-  hyperlink: z.string().optional(),
-});
-
-const googleSheetsResponseSchema = z.object({
-  sheets: z.array(
-    z.object({
-      data: z.array(
-        z.object({
-          rowData: z.array(
-            z.object({
-              values: z.array(cellDataSchema.optional().nullable()).optional(),
-            })
-          ).optional(),
-        })
-      ).optional(),
-    })
-  ).optional(),
-});
-
-function normalizeDate(raw: string): Date | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-
-  const parsed = new Date(trimmed);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed;
-  }
-
-  const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (!slashMatch) return null;
-
-  const [, d, m, y] = slashMatch;
-  const year = y.length === 2 ? `20${y}` : y;
-  const fallback = new Date(`${year}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-  return Number.isNaN(fallback.getTime()) ? null : fallback;
-}
-
-function normalizeUrl(raw: string): string | null {
-  const value = raw.trim();
-  if (!value) return null;
-  // This verifies if the extracted content is actually a link
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
-  return null;
-}
-
-export function parseSheetRows(rows: string[][]): SheetRow[] {
-  return rows
-    .map((row) => {
-      const [
-        dateRaw = "",
-        subject = "",
-        topic = "",
-        teacher = "",
-        batch = "",
-        liveClassId = "",
-        videoUrlRaw = "",
-        pdfUrlRaw = "",
-        uploader = "",
-      ] = row;
-
-      const date = normalizeDate(dateRaw);
-      const normalizedClassId = liveClassId.trim();
-      if (!date || !normalizedClassId) {
-        return null;
-      }
-
-      return {
-        date,
-        subject: subject.trim(),
-        topic: topic.trim(),
-        teacher: teacher.trim(),
-        batch: batch.trim(),
-        liveClassId: normalizedClassId,
-        videoUrl: normalizeUrl(videoUrlRaw),
-        pdfUrl: normalizeUrl(pdfUrlRaw),
-        uploader: uploader.trim(),
-      } satisfies SheetRow;
-    })
-    .filter((entry): entry is SheetRow => Boolean(entry));
-}
+import Papa from 'papaparse';
 
 export function extractSheetId(url: string): string | null {
   if (!url) return null;
   const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  // If it matches a URL pattern, return the ID. Otherwise, assume the input might already be the raw ID.
-  return match ? match[1] : url;
+  return match ? match[1] : null;
 }
 
-export async function fetchSheetValues(
-  sheetIdOrUrl: string, 
-  range: string = "A:ZZ", 
-  apiKey: string = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SHEETS_API_KEY || ""
-): Promise<string[][]> {
-  const sheetId = extractSheetId(sheetIdOrUrl) || sheetIdOrUrl;
+export async function fetchSheetTitle(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+    const match = html.match(/<title>(.*?)<\/title>/);
+    if (match) {
+      return match[1].replace(' - Google Sheets', '').trim();
+    }
+    return 'Untitled Sheet';
+  } catch (error) {
+    return 'Untitled Sheet';
+  }
+}
 
-  // If a default tab name is configured and the range doesn't already specify one, prepend it
+export async function fetchSheetData(url: string): Promise<Record<string, string>[]> {
+  const sheetId = extractSheetId(url);
+  if (!sheetId) {
+    throw new Error('Invalid Google Sheet URL');
+  }
+
+  // Extract gid from URL if present
+  const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
+
+  // Read the default tab name from env (e.g. "Catalogue Tracker")
   const defaultTab = process.env.DEFAULT_SHEET_TAB || '';
-  let finalRange = range;
-  if (defaultTab && !range.includes('!')) {
-    finalRange = `'${defaultTab}'!${range}`;
+
+  let csvUrl: string;
+
+  if (gidMatch) {
+    // URL has a specific tab gid — use it
+    csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gidMatch[1]}`;
+  } else if (defaultTab) {
+    // No gid but we have a default tab name — use the gviz endpoint which supports sheet names
+    csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(defaultTab)}`;
+  } else {
+    // Fallback: export the first tab
+    csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
   }
 
-  // Switched to the main spreadsheets endpoint to access cell-level formatting (hyperlinks)
-  const url = new URL(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`
-  );
-  url.searchParams.set("ranges", finalRange);
-  // Field mask to strictly fetch only the visible text and the hyperlink URL to keep the payload lightweight
-  url.searchParams.set("fields", "sheets.data.rowData.values(formattedValue,hyperlink)");
-  url.searchParams.set("key", apiKey);
+  try {
+    const response = await fetch(csvUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch sheet (${response.status}). Ensure the sheet is set to "Anyone with the link can view".`);
+    }
 
-  const response = await fetch(url.toString(), { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Google Sheets API failed (${response.status}) for ${sheetId}`);
-  }
+    const csvText = await response.text();
 
-  const body = await response.json();
-  const parsed = googleSheetsResponseSchema.safeParse(body);
-  if (!parsed.success) {
-    throw new Error("Google Sheets API returned invalid payload.");
-  }
+    // Detect if Google returned an HTML login page instead of CSV
+    if (csvText.trim().toLowerCase().startsWith('<!doctype html>') || csvText.includes('<html')) {
+      throw new Error('This Google Sheet is PRIVATE. Please set sharing to "Anyone with the link can view".');
+    }
 
-  // Use deeply nested optional chaining to prevent strict TS index errors
-  const rowData = parsed.data.sheets?.[0]?.data?.[0]?.rowData;
-  
-  if (!rowData) {
-    return [];
-  }
-
-  // Reconstruct the 2D array of strings, substituting the hyperlink URL if it exists
-  return rowData.map((row) => {
-    if (!row.values) return [];
-    
-    return row.values.map((cell) => {
-      if (!cell) return "";
-      // Prioritize the actual hyperlink URL. Fallback to the regular text if no link is embedded.
-      return cell.hyperlink || cell.formattedValue || "";
+    // Parse CSV to JSON — trim headers to fix trailing spaces
+    const parsed = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header: string) => header.trim(),
     });
-  });
-}
 
-export async function fetchSheetTitle(
-  sheetIdOrUrl: string, 
-  apiKey: string = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SHEETS_API_KEY || ""
-): Promise<string> {
-  const sheetId = extractSheetId(sheetIdOrUrl) || sheetIdOrUrl;
-  
-  const url = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`);
-  url.searchParams.set("fields", "properties.title");
-  url.searchParams.set("key", apiKey);
-
-  const response = await fetch(url.toString(), { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch title for sheet ${sheetId}`);
+    return parsed.data as Record<string, string>[];
+  } catch (error) {
+    console.error('Error fetching sheet data:', error);
+    throw error;
   }
-
-  const body = await response.json();
-  return body.properties?.title || "Untitled Sheet";
-}
-
-export async function fetchSheetData(
-  sheetIdOrUrl: string, 
-  range: string = "A:ZZ", 
-  apiKey: string = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SHEETS_API_KEY || ""
-): Promise<Record<string, string>[]> {
-  // Use our existing values fetcher that cleanly handles formatting and hyperlinks
-  const values = await fetchSheetValues(sheetIdOrUrl, range, apiKey);
-  if (!values || values.length === 0) return [];
-
-  // Extract the top row as the column headers
-  const headers = values[0];
-  const rows = values.slice(1);
-
-  // Map each subsequent row to an object using the header text as the keys
-  return rows.map((row) => {
-    const record: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      if (header) {
-        record[header] = row[index] || "";
-      }
-    });
-    return record;
-  });
 }
