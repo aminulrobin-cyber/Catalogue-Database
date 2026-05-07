@@ -26,8 +26,8 @@ export async function GET(request: Request) {
     
     await connectToDatabase();
     
-    // Fetch all entries. We lean() to get raw JS objects.
-    const entries = await Entry.find(filter).sort({ updated_at: -1, created_at: -1 }).lean();
+    // Fetch all entries sorted chronologically by date
+    const entries = await Entry.find(filter).sort({ date_sort: 1 }).lean();
 
     return NextResponse.json({ success: true, data: entries });
   } catch (error: any) {

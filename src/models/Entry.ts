@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IEntry extends Document {
   date: string;
+  date_sort: Date;
   subject: string;
   chapter: string;
   teacher: string;
@@ -21,6 +22,7 @@ export interface IEntry extends Document {
 
 const EntrySchema: Schema = new Schema({
   date: { type: String, default: '' },
+  date_sort: { type: Date, default: null },
   subject: { type: String, default: '' },
   chapter: { type: String, default: '' },
   teacher: { type: String, default: '' },
@@ -41,5 +43,6 @@ const EntrySchema: Schema = new Schema({
 // Index for deduplication and faster queries
 EntrySchema.index({ class_id: 1 });
 EntrySchema.index({ status: 1 });
+EntrySchema.index({ date_sort: -1 });
 
 export default mongoose.models.Entry || mongoose.model<IEntry>('Entry', EntrySchema);
