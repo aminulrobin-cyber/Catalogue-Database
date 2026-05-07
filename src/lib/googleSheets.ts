@@ -1,9 +1,31 @@
-import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 export function extractSheetId(url: string): string | null {
   if (!url) return null;
   const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
   return match ? match[1] : null;
+}
+
+// Extract the actual URL from a HYPERLINK() formula
+function extractHyperlinkUrl(formula: string): string | null {
+  if (!formula) return null;
+  // Match HYPERLINK("url", "display") or HYPERLINK("url")
+  const match = formula.match(/HYPERLINK\s*\(\s*"([^"]+)"/i);
+  return match ? match[1] : null;
+}
+
+// Convert Excel serial date number to readable date string
+function excelDateToString(serial: number): string {
+  // Excel dates start from 1900-01-01 (serial 1)
+  const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899
+  const date = new Date(excelEpoch.getTime() + serial * 86400000);
+  
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
 }
 
 export async function fetchSheetTitle(url: string): Promise<string> {
@@ -26,48 +48,84 @@ export async function fetchSheetData(url: string): Promise<Record<string, string
     throw new Error('Invalid Google Sheet URL');
   }
 
-  // Extract gid from URL if present
-  const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
-
-  // Read the default tab name from env (e.g. "Catalogue Tracker")
-  const defaultTab = process.env.DEFAULT_SHEET_TAB || '';
-
-  let csvUrl: string;
-
-  if (gidMatch) {
-    // URL has a specific tab gid — use it
-    csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gidMatch[1]}`;
-  } else if (defaultTab) {
-    // No gid but we have a default tab name — use the gviz endpoint which supports sheet names
-    csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(defaultTab)}`;
-  } else {
-    // Fallback: export the first tab
-    csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+  // Download the spreadsheet as XLSX to preserve HYPERLINK() formulas
+  const xlsxUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+  
+  const response = await fetch(xlsxUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download sheet (${response.status}). Ensure sharing is set to "Anyone with the link can view".`);
   }
 
-  try {
-    const response = await fetch(csvUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch sheet (${response.status}). Ensure the sheet is set to "Anyone with the link can view".`);
-    }
+  const arrayBuffer = await response.arrayBuffer();
+  
+  // Parse with formulas enabled
+  const workbook = XLSX.read(new Uint8Array(arrayBuffer), { 
+    type: 'array', 
+    cellFormula: true 
+  });
 
-    const csvText = await response.text();
+  // Find the target tab (default: "Catalogue Tracker")
+  const defaultTab = process.env.DEFAULT_SHEET_TAB || 'Catalogue Tracker';
+  const sheetName = workbook.SheetNames.find(
+    name => name.toLowerCase().trim() === defaultTab.toLowerCase().trim()
+  ) || workbook.SheetNames[0];
 
-    // Detect if Google returned an HTML login page instead of CSV
-    if (csvText.trim().toLowerCase().startsWith('<!doctype html>') || csvText.includes('<html')) {
-      throw new Error('This Google Sheet is PRIVATE. Please set sharing to "Anyone with the link can view".');
-    }
-
-    // Parse CSV to JSON — trim headers to fix trailing spaces
-    const parsed = Papa.parse(csvText, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header: string) => header.trim(),
-    });
-
-    return parsed.data as Record<string, string>[];
-  } catch (error) {
-    console.error('Error fetching sheet data:', error);
-    throw error;
+  const worksheet = workbook.Sheets[sheetName];
+  if (!worksheet) {
+    throw new Error(`Sheet "${sheetName}" not found in the workbook`);
   }
+
+  const ref = worksheet['!ref'];
+  if (!ref) return [];
+
+  const range = XLSX.utils.decode_range(ref);
+
+  // Extract headers from the first row (trim whitespace)
+  const headers: string[] = [];
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c })];
+    headers.push(cell ? String(cell.v).trim() : '');
+  }
+
+  // Extract data rows
+  const rows: Record<string, string>[] = [];
+  
+  for (let r = range.s.r + 1; r <= range.e.r; r++) {
+    const record: Record<string, string> = {};
+    let hasData = false;
+
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const header = headers[c - range.s.c];
+      if (!header) continue;
+
+      const cell = worksheet[XLSX.utils.encode_cell({ r, c })];
+      
+      if (cell) {
+        // If the cell has a HYPERLINK() formula, extract the actual URL
+        if (cell.f) {
+          const hyperlinkUrl = extractHyperlinkUrl(cell.f);
+          if (hyperlinkUrl) {
+            record[header] = hyperlinkUrl;
+            hasData = true;
+            continue;
+          }
+        }
+
+        // Handle Excel date serial numbers (type "n" in date columns)
+        if (cell.t === 'n' && header.toLowerCase().includes('date')) {
+          record[header] = excelDateToString(cell.v);
+        } else {
+          record[header] = cell.v !== undefined ? String(cell.v).trim() : '';
+        }
+        
+        if (record[header]) hasData = true;
+      } else {
+        record[header] = '';
+      }
+    }
+
+    if (hasData) rows.push(record);
+  }
+
+  return rows;
 }
