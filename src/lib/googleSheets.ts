@@ -101,6 +101,13 @@ export async function fetchSheetData(url: string): Promise<Record<string, string
       const cell = worksheet[XLSX.utils.encode_cell({ r, c })];
       
       if (cell) {
+        // Check for embedded hyperlink (Ctrl+K) which xlsx stores in cell.l
+        if (cell.l && cell.l.Target) {
+          record[header] = cell.l.Target;
+          hasData = true;
+          continue;
+        }
+
         // If the cell has a HYPERLINK() formula, extract the actual URL
         if (cell.f) {
           const hyperlinkUrl = extractHyperlinkUrl(cell.f);
