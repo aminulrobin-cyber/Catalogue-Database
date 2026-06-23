@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
+import AuthProvider from "@/components/AuthProvider";
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700', '800'],
@@ -30,7 +31,9 @@ export default function RootLayout({
       className={`${poppins.variable} ${hindSiliguri.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans bg-paper text-ink selection:bg-magenta-light selection:text-magenta-dark">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

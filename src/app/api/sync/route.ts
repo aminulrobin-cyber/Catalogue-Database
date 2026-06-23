@@ -80,11 +80,14 @@ export async function POST(request: Request) {
           fetchSheetData(url)
         ]);
         
-        // Cache existing class_ids to mark duplicates
-        const existingEntries = await Entry.find({}, { class_id: 1, sheet_id: 1 });
-        const existingClassIds = new Set(existingEntries.map((e: any) => e.class_id));
-        const currentBatchClassIds = new Set();
+        // ── Load existing entries to preserve manual status overrides ──
+        const existingEntries = await Entry.find({ sheet_id: sheetId }).lean();
+        const existingByClassId = new Map<string, any>();
+        for (const e of existingEntries) {
+          existingByClassId.set(e.class_id, e);
+        }
 
+        const currentBatchClassIds = new Set();
         const processedRows = [];
         let errorCount = 0;
         let skippedCount = 0;
@@ -93,16 +96,15 @@ export async function POST(request: Request) {
           const row = rows[i];
 
           // ── STEP 1: Validate the date ──
-          // Skip rows where "Date" is not a real date (filters Q-3, Q-2, section headers, blank rows)
           const dateRaw = getColumnValue(row, ['Date', 'date', 'Time', 'Day']);
           const dateParsed = parseDate(dateRaw);
           
           if (!dateParsed) {
             skippedCount++;
-            continue; // Skip this row — it's a header, section marker, or garbage
+            continue;
           }
 
-          // ── STEP 2: Get Class ID (generate fallback if missing) ──
+          // ── STEP 2: Get Class ID ──
           let class_id = getColumnValue(row, ['Live Class ID', 'Class ID', 'id', 'class id', 'ClassId', 'Live Class Id']);
           if (!class_id) {
             class_id = `auto-${sheetId.substring(0, 6)}-${i}`;
@@ -117,28 +119,28 @@ export async function POST(request: Request) {
           const pdf_link = normalizeLink(getColumnValue(row, ['PDF Link', 'PDF', 'Pdf', 'PDf', 'Slide Link', 'Note']));
           const uploader = getColumnValue(row, ['Uploader Name', 'Uploader', "Uploader's Name"]);
 
-          // ── STEP 4: Compute statuses ──
+          // ── STEP 4: Compute auto statuses ──
           const video_status = getLinkStatus(video_link);
           const pdf_status = getLinkStatus(pdf_link);
-          const status = (video_status === 'ok' && pdf_status === 'ok') ? 'ok' 
+          const autoStatus = (video_status === 'ok' && pdf_status === 'ok') ? 'ok' 
             : (video_status === 'broken' || pdf_status === 'broken') ? 'error' 
             : 'pending';
 
-          if (status === 'error') errorCount++;
+          // ── STEP 5: Respect manual status overrides ──
+          const existing = existingByClassId.get(class_id);
+          let finalStatus = autoStatus;
+          let statusOverride = false;
           
-          // ── STEP 5: Check duplicates ──
-          let isDuplicate = false;
-          const alreadyInDb = existingClassIds.has(class_id);
-          const alreadyInBatch = currentBatchClassIds.has(class_id);
-          
-          if (alreadyInBatch) {
-            isDuplicate = true;
-          } else if (alreadyInDb) {
-            const originalFromThisSheet = existingEntries.find((e: any) => e.class_id === class_id && e.sheet_id === sheetId);
-            if (!originalFromThisSheet) {
-              isDuplicate = true; 
-            }
+          if (existing && existing.status_override) {
+            // Admin manually set this status — preserve it
+            finalStatus = existing.status;
+            statusOverride = true;
           }
+
+          if (finalStatus === 'error') errorCount++;
+          
+          // ── STEP 6: Check duplicates ──
+          let isDuplicate = currentBatchClassIds.has(class_id);
           currentBatchClassIds.add(class_id);
 
           processedRows.push({
@@ -146,19 +148,21 @@ export async function POST(request: Request) {
             date_sort: dateParsed,
             subject, chapter, teacher, batch, class_id,
             video_link, pdf_link, uploader, sheet_id: sheetId,
-            video_status, pdf_status, status, duplicate: isDuplicate
+            video_status, pdf_status, 
+            status: finalStatus,
+            status_override: statusOverride,
+            duplicate: isDuplicate
           });
         }
 
-        // ── STEP 6: Delete old entries for this sheet and insert fresh data ──
-        // This ensures missing rows from the sheet are also removed from the DB
+        // ── STEP 7: Delete old entries and insert fresh data ──
         await Entry.deleteMany({ sheet_id: sheetId });
         
         if (processedRows.length > 0) {
           await Entry.insertMany(processedRows);
         }
 
-        // ── STEP 7: Update SheetTracker ──
+        // ── STEP 8: Update SheetTracker ──
         await SheetTracker.findOneAndUpdate(
           { sheet_id: sheetId },
           { 

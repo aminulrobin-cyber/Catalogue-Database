@@ -13,6 +13,7 @@ export interface IEntry extends Document {
   uploader: string;
   sheet_id: string;
   status: 'pending' | 'ok' | 'error';
+  status_override: boolean;
   video_status: 'pending' | 'ok' | 'broken';
   pdf_status: 'pending' | 'ok' | 'broken';
   duplicate: boolean;
@@ -33,6 +34,7 @@ const EntrySchema: Schema = new Schema({
   uploader: { type: String, default: '' },
   sheet_id: { type: String, required: true },
   status: { type: String, enum: ['pending', 'ok', 'error'], default: 'pending' },
+  status_override: { type: Boolean, default: false },
   video_status: { type: String, enum: ['pending', 'ok', 'broken'], default: 'pending' },
   pdf_status: { type: String, enum: ['pending', 'ok', 'broken'], default: 'pending' },
   duplicate: { type: Boolean, default: false },

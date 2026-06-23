@@ -1,13 +1,155 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 import { 
   RefreshCw, AlertCircle, CheckCircle2, HelpCircle, 
   Search, ExternalLink, Loader2, FileText, Video, FileDown,
-  FilterX, ArrowLeft, Database, Clock, XCircle, Eye
+  FilterX, ArrowLeft, Database, Clock, XCircle, LogOut,
+  ChevronDown, Check
 } from 'lucide-react';
 
+// ═══════════════════════════════════════════════════════════════════
+// Status Dropdown — The interactive replacement for StatusBadge
+// ═══════════════════════════════════════════════════════════════════
+function StatusDropdown({ 
+  entryId, 
+  currentStatus, 
+  onStatusChange 
+}: { 
+  entryId: string; 
+  currentStatus: string; 
+  onStatusChange: (id: string, newStatus: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const options = [
+    { value: 'ok', label: 'OK / Approved', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', hoverBg: 'hover:bg-emerald-50' },
+    { value: 'pending', label: 'Pending', icon: Clock, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light', border: 'border-brand-sunrise/30', hoverBg: 'hover:bg-brand-sunrise-light' },
+    { value: 'error', label: 'Fix Needed', icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light', border: 'border-brand-coral/30', hoverBg: 'hover:bg-brand-coral-light' },
+  ];
+
+  const current = options.find(o => o.value === currentStatus) || options[1];
+
+  const handleSelect = async (newStatus: string) => {
+    if (newStatus === currentStatus) {
+      setIsOpen(false);
+      return;
+    }
+    
+    setSaving(true);
+    setIsOpen(false);
+
+    try {
+      const res = await fetch(`/api/entries/${entryId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        onStatusChange(entryId, newStatus);
+      } else {
+        alert('Failed to update status: ' + data.error);
+      }
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div ref={dropdownRef} className="relative inline-block">
+      {/* Trigger Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={saving}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition-hover ${current.bg} ${current.color} ${current.border} hover:shadow-sm disabled:opacity-60`}
+      >
+        {saving ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <current.icon className="w-3.5 h-3.5" />
+        )}
+        {current.label}
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 z-50 w-52 bg-white rounded-xl shadow-lg border border-ink-muted/15 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="px-3 py-2 border-b border-ink-muted/10">
+            <p className="text-[10px] font-bold text-ink-muted uppercase tracking-widest">Set Status</p>
+          </div>
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => handleSelect(opt.value)}
+              className={`w-full flex items-center gap-3 px-3 py-3 text-left text-sm font-semibold transition-colors ${opt.hoverBg} ${opt.value === currentStatus ? opt.bg : ''}`}
+            >
+              <opt.icon className={`w-4 h-4 ${opt.color}`} />
+              <span className="text-ink">{opt.label}</span>
+              {opt.value === currentStatus && (
+                <Check className="w-4 h-4 text-brand-indigo ml-auto" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// User Menu — Shows current user and sign out button
+// ═══════════════════════════════════════════════════════════════════
+function UserMenu() {
+  const { data: session } = useSession();
+  if (!session?.user) return null;
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="text-right hidden sm:block">
+        <p className="text-sm font-bold text-white leading-tight">{session.user.name}</p>
+        <p className="text-xs text-brand-indigo-light/70">{session.user.email}</p>
+      </div>
+      {session.user.image && (
+        <img 
+          src={session.user.image} 
+          alt={session.user.name || ''} 
+          className="w-10 h-10 rounded-full ring-2 ring-white/30"
+        />
+      )}
+      <button
+        onClick={() => signOut()}
+        className="p-2.5 text-brand-indigo-light/60 hover:text-white hover:bg-white/10 rounded-xl transition-hover"
+        title="Sign out"
+      >
+        <LogOut className="w-5 h-5" />
+      </button>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Main SheetView Component
+// ═══════════════════════════════════════════════════════════════════
 export default function SheetView({ sheetId }: { sheetId: string }) {
   const [entries, setEntries] = useState<any[]>([]);
   const [sheetTracker, setSheetTracker] = useState<any>(null);
@@ -75,6 +217,13 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
     }
   };
 
+  // Optimistic status update — instant UI feedback without page reload
+  const handleStatusChange = (entryId: string, newStatus: string) => {
+    setEntries(prev => prev.map(e => 
+      e._id === entryId ? { ...e, status: newStatus, status_override: true } : e
+    ));
+  };
+
   const clearFilters = () => {
     setSearchClassId('');
     setFilterSubject('');
@@ -110,32 +259,6 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
     });
   }, [entries, showErrorsOnly, searchClassId, filterSubject, filterTeacher, filterBatch, filterStatus]);
 
-  const StatusIcon = ({ status }: { status: string }) => {
-    if (status === 'ok') return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
-    if (status === 'error' || status === 'broken') return <AlertCircle className="w-4 h-4 text-brand-coral" />;
-    if (status === 'pending') return <Clock className="w-4 h-4 text-brand-sunrise" />;
-    return <HelpCircle className="w-4 h-4 text-ink-muted" />;
-  };
-
-  const StatusBadge = ({ status }: { status: string }) => {
-    const label = status === 'ok' ? 'OK' 
-      : status === 'error' || status === 'broken' ? 'ISSUE' 
-      : status === 'pending' ? 'PENDING' 
-      : 'NOT CHECKED';
-    
-    const bgClass = status === 'ok' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-      : status === 'pending' ? 'bg-brand-sunrise-light text-brand-sunrise border-brand-sunrise/30' 
-      : status === 'error' || status === 'broken' ? 'bg-brand-coral-light text-brand-coral border-brand-coral/30'
-      : 'bg-gray-100 text-gray-500 border-gray-200';
-
-    return (
-      <span className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${bgClass}`}>
-        <StatusIcon status={status} />
-        {label}
-      </span>
-    );
-  };
-
   // Helper to render a clickable link or a "missing" indicator
   const LinkCell = ({ url, type }: { url: string; type: 'video' | 'pdf' }) => {
     const isValid = url && (url.startsWith('http://') || url.startsWith('https://'));
@@ -158,7 +281,6 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
     }
     
     if (url) {
-      // Has text but not a valid URL (e.g. just "Link" text without a hyperlink behind it)
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-sunrise-light text-brand-sunrise text-xs font-bold">
           <Clock className="w-3.5 h-3.5" />
@@ -201,8 +323,9 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
           )}
         </div>
         
-        {/* Sync Controls */}
-        <div className="flex items-center mt-2 md:mt-0">
+        {/* Right side: User Menu + Sync */}
+        <div className="flex items-center gap-4 mt-2 md:mt-0">
+          <UserMenu />
           <button 
             onClick={handleSync} 
             disabled={syncing || !sheetTracker}
@@ -232,9 +355,9 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-ink-muted/10">
           {[
             { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo', bg: 'bg-brand-indigo-light' },
-            { label: 'All OK', value: statusCounts.ok, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Approved', value: statusCounts.ok, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             { label: 'Pending', value: statusCounts.pending, icon: Clock, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
-            { label: 'Issues', value: statusCounts.issues, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light' },
+            { label: 'Fix Needed', value: statusCounts.issues, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light' },
             { label: 'Duplicates', value: statusCounts.duplicates, icon: FileText, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
           ].map((stat, i) => (
             <div key={i} className="flex items-center gap-4 px-5 py-5">
@@ -302,8 +425,8 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
           ))}
           <select className="bg-surface border-0 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Statuses</option>
-            <option value="ok">OK</option>
-            <option value="error">Issue</option>
+            <option value="ok">OK / Approved</option>
+            <option value="error">Fix Needed</option>
             <option value="pending">Pending</option>
           </select>
         </div>
@@ -342,7 +465,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
                 </tr>
               ) : (
                 filteredEntries.map((entry, idx) => (
-                  <tr key={idx} className="hover:bg-brand-indigo-light/30 transition-hover">
+                  <tr key={entry._id || idx} className="hover:bg-brand-indigo-light/30 transition-hover">
                     <td className="px-5 py-4 whitespace-nowrap font-medium text-ink">
                       {entry.date || '-'}
                     </td>
@@ -369,7 +492,11 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
                       {entry.uploader || '-'}
                     </td>
                     <td className="px-5 py-4 text-center">
-                      <StatusBadge status={entry.status} />
+                      <StatusDropdown
+                        entryId={entry._id}
+                        currentStatus={entry.status}
+                        onStatusChange={handleStatusChange}
+                      />
                     </td>
                   </tr>
                 ))
