@@ -7,7 +7,7 @@ import {
   RefreshCw, AlertCircle, CheckCircle2, HelpCircle, 
   Search, ExternalLink, Loader2, FileText, Video, FileDown,
   FilterX, ArrowLeft, Database, Clock, XCircle, LogOut,
-  ChevronDown, Check
+  ChevronDown, Check, Shield
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -123,11 +123,19 @@ function UserMenu() {
   const { data: session } = useSession();
   if (!session?.user) return null;
 
+  const role = (session.user as any).role || 'viewer';
+  const isAdmin = role === 'admin';
+
   return (
     <div className="flex items-center gap-3">
       <div className="text-right hidden sm:block">
         <p className="text-sm font-bold text-white leading-tight">{session.user.name}</p>
-        <p className="text-xs text-brand-indigo-light/70">{session.user.email}</p>
+        <div className="flex items-center justify-end gap-2 mt-0.5">
+          <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isAdmin ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-white/60'}`}>
+            {isAdmin ? <Shield className="w-2.5 h-2.5" /> : null}
+            {role}
+          </span>
+        </div>
       </div>
       {session.user.image && (
         <img 
@@ -135,6 +143,15 @@ function UserMenu() {
           alt={session.user.name || ''} 
           className="w-10 h-10 rounded-full ring-2 ring-white/30"
         />
+      )}
+      {isAdmin && (
+        <Link
+          href="/admin"
+          className="p-2.5 text-brand-indigo-light/60 hover:text-white hover:bg-white/10 rounded-xl transition-hover"
+          title="Admin Panel"
+        >
+          <Shield className="w-5 h-5" />
+        </Link>
       )}
       <button
         onClick={() => signOut()}
@@ -151,6 +168,10 @@ function UserMenu() {
 // Main SheetView Component
 // ═══════════════════════════════════════════════════════════════════
 export default function SheetView({ sheetId }: { sheetId: string }) {
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role || 'viewer';
+  const isAdmin = userRole === 'admin';
+
   const [entries, setEntries] = useState<any[]>([]);
   const [sheetTracker, setSheetTracker] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -326,14 +347,16 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
         {/* Right side: User Menu + Sync */}
         <div className="flex items-center gap-4 mt-2 md:mt-0">
           <UserMenu />
-          <button 
-            onClick={handleSync} 
-            disabled={syncing || !sheetTracker}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-magenta hover:bg-brand-magenta-dark text-white rounded-xl font-bold transition-hover shadow-ambient disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap h-[48px]"
-          >
-            {syncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
-            {syncing ? 'Syncing...' : 'Sync Data'}
-          </button>
+          {isAdmin && (
+            <button 
+              onClick={handleSync} 
+              disabled={syncing || !sheetTracker}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-magenta hover:bg-brand-magenta-dark text-white rounded-xl font-bold transition-hover shadow-ambient disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap h-[48px]"
+            >
+              {syncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+              {syncing ? 'Syncing...' : 'Sync Data'}
+            </button>
+          )}
         </div>
       </header>
 
