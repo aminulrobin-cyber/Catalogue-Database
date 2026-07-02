@@ -119,11 +119,10 @@ function StatusDropdown({
 // ═══════════════════════════════════════════════════════════════════
 // User Menu — Shows current user and sign out button
 // ═══════════════════════════════════════════════════════════════════
-function UserMenu() {
+function UserMenu({ role }: { role: string }) {
   const { data: session } = useSession();
   if (!session?.user) return null;
 
-  const role = (session.user as any).role || 'viewer';
   const isAdmin = role === 'admin';
 
   return (
@@ -168,14 +167,20 @@ function UserMenu() {
 // Main SheetView Component
 // ═══════════════════════════════════════════════════════════════════
 export default function SheetView({ sheetId }: { sheetId: string }) {
-  const { data: session } = useSession();
-  const userRole = (session?.user as any)?.role || 'viewer';
+  const [userRole, setUserRole] = useState('viewer');
   const isAdmin = userRole === 'admin';
 
   const [entries, setEntries] = useState<any[]>([]);
   const [sheetTracker, setSheetTracker] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+
+  // Fetch user role from /api/me (runs in Node.js, not Edge)
+  useEffect(() => {
+    fetch('/api/me').then(r => r.json()).then(data => {
+      if (data.success) setUserRole(data.data.role);
+    }).catch(() => {});
+  }, []);
   
   // Filters state
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
@@ -346,7 +351,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
         
         {/* Right side: User Menu + Sync */}
         <div className="flex items-center gap-4 mt-2 md:mt-0">
-          <UserMenu />
+          <UserMenu role={userRole} />
           {isAdmin && (
             <button 
               onClick={handleSync} 

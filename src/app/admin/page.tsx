@@ -9,12 +9,10 @@ import {
 } from 'lucide-react';
 
 export default function AdminPage() {
-  const { data: session } = useSession();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
-
-  const role = (session?.user as any)?.role;
+  const [role, setRole] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -32,8 +30,15 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (role === 'admin') fetchUsers();
-  }, [role]);
+    fetch('/api/me').then(r => r.json()).then(data => {
+      if (data.success) {
+        setRole(data.data.role);
+        if (data.data.role === 'admin') fetchUsers();
+      } else {
+        setRole('viewer');
+      }
+    }).catch(() => setRole('viewer'));
+  }, []);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     setUpdating(userId);
