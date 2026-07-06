@@ -62,6 +62,7 @@ export async function PATCH(request: Request) {
     }
 
     targetUser.role = role;
+    targetUser.admin_request = false;
     await targetUser.save();
 
     return NextResponse.json({ success: true, data: targetUser });

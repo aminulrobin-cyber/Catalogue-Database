@@ -180,6 +180,9 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
     fetch('/api/me').then(r => r.json()).then(data => {
       if (data.success) setUserRole(data.data.role);
     }).catch(() => {});
+    
+    // Track that the user viewed a section
+    fetch('/api/users/track-view', { method: 'POST' }).catch(() => {});
   }, []);
   
   // Filters state
@@ -337,11 +340,15 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
           </h1>
           {sheetTracker && (
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <a href={sheetTracker.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-magenta-light hover:text-white transition-hover">
-                <ExternalLink className="w-4 h-4" />
-                Open Source Google Sheet
-              </a>
-              <span className="text-brand-indigo-dark hidden sm:inline">|</span>
+              {isAdmin && (
+                <>
+                  <a href={sheetTracker.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-magenta-light hover:text-white transition-hover">
+                    <ExternalLink className="w-4 h-4" />
+                    Open Source Google Sheet
+                  </a>
+                  <span className="text-brand-indigo-dark hidden sm:inline">|</span>
+                </>
+              )}
               <span className="text-sm font-medium text-brand-indigo-light/80">
                 Last synced: {new Date(sheetTracker.last_synced).toLocaleString()}
               </span>

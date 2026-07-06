@@ -48,6 +48,9 @@ export async function GET() {
         name: user.name,
         image: user.image,
         role: user.role,
+        login_count: user.login_count,
+        sections_viewed: user.sections_viewed,
+        admin_request: user.admin_request,
       },
     });
   } catch (error: any) {

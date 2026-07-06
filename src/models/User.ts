@@ -7,6 +7,8 @@ export interface IUser extends Document {
   role: 'admin' | 'viewer';
   last_login: Date;
   login_count: number;
+  admin_request: boolean;
+  sections_viewed: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -18,6 +20,8 @@ const UserSchema: Schema = new Schema({
   role: { type: String, enum: ['admin', 'viewer'], default: 'viewer' },
   last_login: { type: Date, default: Date.now },
   login_count: { type: Number, default: 1 },
+  admin_request: { type: Boolean, default: false },
+  sections_viewed: { type: Number, default: 0 },
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });

@@ -155,10 +155,16 @@ export default function AdminPage() {
                         )}
                         <div>
                           <p className="font-bold text-ink text-sm">{user.name || '—'}</p>
-                          {isPrimary && (
+                          {isPrimary ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-black text-brand-sunrise uppercase">
                               <Crown className="w-3 h-3" /> Primary Admin
                             </span>
+                          ) : (
+                            user.admin_request && user.role !== 'admin' && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-brand-sunrise uppercase px-1.5 py-0.5 bg-brand-sunrise-light rounded-full border border-brand-sunrise/20">
+                                <Clock className="w-3 h-3" /> Requested Admin
+                              </span>
+                            )
                           )}
                         </div>
                       </div>
