@@ -21,7 +21,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-      className="p-2 text-ink-muted hover:text-brand-indigo bg-white/30 dark:bg-black/30 backdrop-blur-sm rounded-xl transition-all duration-300 border border-white/40 dark:border-white/20 shadow-sm hover:shadow-ambient-hover"
+      className="p-2 text-ink-muted dark:text-white/80 hover:text-brand-indigo dark:hover:text-white bg-white/30 dark:bg-black/30 backdrop-blur-sm rounded-xl transition-all duration-300 border border-white/40 dark:border-white/20 shadow-sm hover:shadow-ambient-hover"
       title="Toggle Dark Mode"
     >
       {resolvedTheme === 'dark' ? (
