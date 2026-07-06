@@ -391,7 +391,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
         {/* Status counts */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-ink-muted/10">
           {[
-            { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo dark:text-brand-indigo-light', bg: 'bg-white/40 dark:bg-black/40' },
+            { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo dark:text-brand-indigo-light', bg: 'bg-white/40 dark:bg-[#111]' },
             { label: 'Approved', value: statusCounts.ok, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
             { label: 'Pending', value: statusCounts.pending, icon: Clock, color: 'text-brand-sunrise-dark', bg: 'bg-brand-sunrise-light/50' },
             { label: 'Fix Needed', value: statusCounts.issues, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light/50' },
@@ -455,12 +455,12 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
             { value: filterTeacher, setter: setFilterTeacher, defaultText: 'All Teachers', options: uniqueTeachers },
             { value: filterBatch, setter: setFilterBatch, defaultText: 'All Batches', options: uniqueBatches },
           ].map((selectProps, i) => (
-             <select key={i} className="bg-white/50 dark:bg-black/40 backdrop-blur-sm border border-white/60 dark:border-white/20 rounded-xl px-4 py-3 text-sm font-semibold text-ink dark:text-white outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={selectProps.value} onChange={e => selectProps.setter(e.target.value)}>
+             <select key={i} className="bg-white/50 dark:bg-[#111] backdrop-blur-sm border border-white/60 dark:border-white/20 rounded-xl px-4 py-3 text-sm font-semibold text-ink dark:text-white outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={selectProps.value} onChange={e => selectProps.setter(e.target.value)}>
                <option value="">{selectProps.defaultText}</option>
                {selectProps.options.map(o => <option key={o} value={o}>{o}</option>)}
              </select>
           ))}
-          <select className="bg-white/50 dark:bg-black/40 backdrop-blur-sm border border-white/60 dark:border-white/20 rounded-xl px-4 py-3 text-sm font-semibold text-ink dark:text-white outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <select className="bg-white/50 dark:bg-[#111] backdrop-blur-sm border border-white/60 dark:border-white/20 rounded-xl px-4 py-3 text-sm font-semibold text-ink dark:text-white outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="ok">OK / Approved</option>
             <option value="error">Fix Needed</option>
@@ -541,7 +541,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
             </tbody>
           </table>
         </div>
-        <div className="px-6 py-4 border-t border-white/50 dark:border-white/20 bg-white/40 dark:bg-black/30 text-sm font-bold text-ink-secondary dark:text-white/70 flex justify-between items-center">
+        <div className="px-6 py-4 border-t border-white/50 dark:border-white/20 bg-white/40 dark:bg-[#111] text-sm font-bold text-ink-secondary dark:text-white/70 flex justify-between items-center">
           <span>Showing {filteredEntries.length} of {entries.length} entries</span>
           {filteredEntries.length !== entries.length && (
             <button onClick={clearFilters} className="text-brand-magenta hover:text-brand-magenta-dark text-xs font-bold transition-hover">

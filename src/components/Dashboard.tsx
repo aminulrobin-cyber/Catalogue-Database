@@ -137,19 +137,19 @@ export default function Dashboard() {
                 <button 
                   onClick={handleRequestAdmin}
                   disabled={requesting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-indigo-light hover:bg-brand-indigo text-brand-indigo hover:text-white text-xs font-bold rounded-xl border border-brand-indigo/20 transition-hover disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-indigo-light dark:bg-[#111] hover:bg-brand-indigo dark:hover:bg-white text-brand-indigo dark:text-white hover:text-white dark:hover:text-black text-xs font-bold rounded-xl border border-brand-indigo/20 dark:border-white/20 transition-hover disabled:opacity-50"
                 >
                   <Key className="w-4 h-4" /> Request Admin Access
                 </button>
               )
             )}
             {isAdmin && (
-              <Link href="/admin" className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white text-xs font-bold rounded-xl border border-emerald-200 transition-hover">
+              <Link href="/admin" className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 dark:bg-[#111] hover:bg-emerald-600 dark:hover:bg-white text-emerald-700 dark:text-white hover:text-white dark:hover:text-black text-xs font-bold rounded-xl border border-emerald-200 dark:border-white/20 transition-hover">
                 <Shield className="w-4 h-4" /> Admin Panel
               </Link>
             )}
             <ThemeToggle />
-            <button onClick={() => signOut()} className="p-2 text-ink-muted dark:text-white/80 hover:text-brand-coral bg-white/30 dark:bg-black/30 backdrop-blur-sm rounded-xl transition-hover border border-white/40 dark:border-white/20" title="Sign Out">
+            <button onClick={() => signOut()} className="p-2 text-ink-muted dark:text-white/80 hover:text-brand-coral bg-white/30 dark:bg-[#111] backdrop-blur-sm rounded-xl transition-hover border border-white/40 dark:border-white/20" title="Sign Out">
               <LogOut className="w-5 h-5" />
             </button>
           </div>
@@ -181,7 +181,7 @@ export default function Dashboard() {
             <button 
               onClick={handleSync} 
               disabled={syncing}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-magenta hover:bg-brand-magenta-dark text-white rounded-xl font-semibold transition-hover shadow-ambient disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap h-[48px]"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-magenta dark:bg-white hover:bg-brand-magenta-dark dark:hover:bg-gray-200 text-white dark:text-black rounded-xl font-semibold transition-hover shadow-ambient disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap h-[48px]"
             >
               {syncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
               {syncing ? 'Importing...' : 'Import Sheets'}
@@ -201,7 +201,7 @@ export default function Dashboard() {
           </div>
         ) : sheets.length === 0 ? (
           <div className="py-20 glass-panel rounded-2xl flex flex-col items-center justify-center text-center px-4">
-            <div className="w-20 h-20 bg-white/50 dark:bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center mb-5 border border-white/60 dark:border-white/20">
+            <div className="w-20 h-20 bg-white/50 dark:bg-[#111] backdrop-blur-sm rounded-full flex items-center justify-center mb-5 border border-white/60 dark:border-white/20">
               <FileSpreadsheet className="w-10 h-10 text-brand-indigo dark:text-brand-indigo-light" />
             </div>
             <h3 className="text-xl font-bold text-ink dark:text-white mb-2">No Sheets Imported</h3>
@@ -210,48 +210,50 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sheets.map((sheet) => (
-              <Link key={sheet._id} href={`/sheet/${sheet.sheet_id}`} className="group block outline-none">
-                <div className="glass-card rounded-[16px] p-6 h-full flex flex-col relative overflow-hidden group-focus:border-brand-magenta">
-                  
-                  <div className="flex items-start justify-between mb-5">
-                    <div className="bg-white/50 dark:bg-black/40 backdrop-blur-sm p-3 rounded-xl border border-white/60 dark:border-white/20">
-                      <FileSpreadsheet className="w-6 h-6 text-brand-indigo dark:text-brand-indigo-light" />
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-white/40 dark:bg-black/30 backdrop-blur-sm border border-white/50 dark:border-white/20 px-3 py-1.5 rounded-full">
-                      <span className="text-xs font-bold text-brand-indigo dark:text-brand-indigo-light uppercase tracking-wider">
-                        {sheet.total_entries} Classes
-                      </span>
-                    </div>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-ink dark:text-white line-clamp-2 mb-3 group-hover:text-brand-indigo dark:group-hover:text-brand-indigo-light transition-hover">
-                    {sheet.title}
-                  </h3>
-                  
-                  <div className="mt-auto pt-5 flex items-center justify-between border-t border-white/40">
-                    <div className="flex items-center gap-2">
-                      {sheet.error_count > 0 ? (
-                        <div className="flex items-center gap-2 text-sm font-semibold text-brand-coral">
-                          <AlertCircle className="w-5 h-5" />
-                          <span>{sheet.error_count} Errors</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                          <CheckCircle2 className="w-5 h-5" />
-                          <span>All Valid</span>
-                        </div>
-                      )}
-                    </div>
+          <div className="dark:chromatic-wrapper">
+            <div className="dark:chromatic-content grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 dark:p-6">
+              {sheets.map((sheet) => (
+                <Link key={sheet._id} href={`/sheet/${sheet.sheet_id}`} className="group block outline-none">
+                  <div className="glass-card rounded-[16px] p-6 h-full flex flex-col relative overflow-hidden group-focus:border-brand-magenta dark:group-focus:border-white">
                     
-                    <div className="w-8 h-8 rounded-full bg-white/40 dark:bg-black/40 flex items-center justify-center group-hover:bg-brand-magenta-light dark:group-hover:bg-brand-magenta transition-hover">
-                      <ChevronRight className="w-5 h-5 text-ink-muted dark:text-white/60 group-hover:text-brand-magenta dark:group-hover:text-white" />
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="bg-white/50 dark:bg-white/5 backdrop-blur-sm p-3 rounded-xl border border-white/60 dark:border-white/10">
+                        <FileSpreadsheet className="w-6 h-6 text-brand-indigo dark:text-white" />
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-white/40 dark:bg-white/5 backdrop-blur-sm border border-white/50 dark:border-white/10 px-3 py-1.5 rounded-full">
+                        <span className="text-xs font-bold text-brand-indigo dark:text-white uppercase tracking-wider">
+                          {sheet.total_entries} Classes
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg font-bold text-ink dark:text-white line-clamp-2 mb-3 group-hover:text-brand-indigo transition-hover">
+                      {sheet.title}
+                    </h3>
+                    
+                    <div className="mt-auto pt-5 flex items-center justify-between border-t border-white/40 dark:border-white/10">
+                      <div className="flex items-center gap-2">
+                        {sheet.error_count > 0 ? (
+                          <div className="flex items-center gap-2 text-sm font-semibold text-brand-coral">
+                            <AlertCircle className="w-5 h-5" />
+                            <span>{sheet.error_count} Errors</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
+                            <CheckCircle2 className="w-5 h-5" />
+                            <span>All Valid</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="w-8 h-8 rounded-full bg-white/40 dark:bg-white/10 flex items-center justify-center group-hover:bg-brand-magenta-light dark:group-hover:bg-white transition-hover">
+                        <ChevronRight className="w-5 h-5 text-ink-muted dark:text-white/60 group-hover:text-brand-magenta dark:group-hover:text-black" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>
