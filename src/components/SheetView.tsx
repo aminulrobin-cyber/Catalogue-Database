@@ -389,7 +389,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
         {/* Status counts */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-ink-muted/10">
           {[
-            { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo', bg: 'bg-white/40' },
+            { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo dark:text-brand-indigo-light', bg: 'bg-white/40 dark:bg-black/40' },
             { label: 'Approved', value: statusCounts.ok, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
             { label: 'Pending', value: statusCounts.pending, icon: Clock, color: 'text-brand-sunrise-dark', bg: 'bg-brand-sunrise-light/50' },
             { label: 'Fix Needed', value: statusCounts.issues, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light/50' },
@@ -400,8 +400,8 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-xs font-bold text-ink-muted uppercase tracking-wider">{stat.label}</p>
-                <p className="text-2xl font-black text-ink mt-0.5">{stat.value}</p>
+                <p className="text-xs font-bold text-ink-muted dark:text-white/60 uppercase tracking-wider">{stat.label}</p>
+                <p className="text-2xl font-black text-ink dark:text-white mt-0.5">{stat.value}</p>
               </div>
             </div>
           ))}
@@ -436,7 +436,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
                 <div className={`w-12 h-7 rounded-full transition-colors ${showErrorsOnly ? 'bg-brand-coral' : 'bg-ink-muted/30'}`}></div>
                 <div className={`absolute w-5 h-5 bg-white rounded-full transition-transform top-1 left-1 shadow-sm ${showErrorsOnly ? 'translate-x-5' : 'translate-x-0'}`}></div>
               </div>
-              <span className="text-sm font-bold text-ink-secondary group-hover:text-ink transition-colors">
+              <span className="text-sm font-bold text-ink-secondary dark:text-white/70 group-hover:text-ink dark:group-hover:text-white transition-colors">
                 Show Only Issues
               </span>
             </label>
@@ -470,8 +470,8 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
       {/* Data Table */}
       <div className="glass-table flex flex-col">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-ink-secondary">
-            <thead className="glass-table-header text-xs uppercase font-bold text-ink tracking-wider">
+          <table className="w-full text-left text-sm text-ink-secondary dark:text-white/70">
+            <thead className="glass-table-header text-xs uppercase font-bold text-ink dark:text-white tracking-wider">
               <tr>
                 <th className="px-5 py-5">Date</th>
                 <th className="px-5 py-5">Subject</th>
@@ -487,24 +487,24 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
             <tbody className="divide-y divide-ink-muted/10">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-16 text-center text-ink-muted">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-indigo" />
+                  <td colSpan={9} className="px-6 py-16 text-center text-ink-muted dark:text-white/60">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-brand-indigo dark:text-brand-indigo-light" />
                     <span className="font-semibold text-base">Loading class data...</span>
                   </td>
                 </tr>
               ) : filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-16 text-center text-ink-muted font-semibold text-base">
+                  <td colSpan={9} className="px-6 py-16 text-center text-ink-muted dark:text-white/60 font-semibold text-base">
                     No classes found. Try syncing or adjusting your filters.
                   </td>
                 </tr>
               ) : (
                 filteredEntries.map((entry, idx) => (
                   <tr key={entry._id || idx} className="glass-table-row">
-                    <td className="px-5 py-4 whitespace-nowrap font-medium text-ink">
+                    <td className="px-5 py-4 whitespace-nowrap font-medium text-ink dark:text-white">
                       {entry.date || '-'}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap font-semibold font-bangla text-ink">
+                    <td className="px-5 py-4 whitespace-nowrap font-semibold font-bangla text-ink dark:text-white">
                       {entry.subject || '-'}
                     </td>
                     <td className="px-5 py-4 max-w-[280px] font-medium font-bangla" title={entry.chapter}>
@@ -523,7 +523,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
                     <td className="px-5 py-4 text-center">
                       <LinkCell url={entry.pdf_link} type="pdf" />
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap font-medium text-ink-secondary">
+                    <td className="px-5 py-4 whitespace-nowrap font-medium text-ink-secondary dark:text-white/70">
                       {entry.uploader || '-'}
                     </td>
                     <td className="px-5 py-4 text-center">
@@ -539,7 +539,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
             </tbody>
           </table>
         </div>
-        <div className="px-6 py-4 border-t border-white/50 bg-white/40 text-sm font-bold text-ink-secondary flex justify-between items-center">
+        <div className="px-6 py-4 border-t border-white/50 dark:border-white/20 bg-white/40 dark:bg-black/30 text-sm font-bold text-ink-secondary dark:text-white/70 flex justify-between items-center">
           <span>Showing {filteredEntries.length} of {entries.length} entries</span>
           {filteredEntries.length !== entries.length && (
             <button onClick={clearFilters} className="text-brand-magenta hover:text-brand-magenta-dark text-xs font-bold transition-hover">

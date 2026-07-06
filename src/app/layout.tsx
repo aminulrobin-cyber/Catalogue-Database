@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Internal Dashboard for tracking and validating classes.",
 };
 
+import { ThemeProvider } from '@/components/ThemeProvider';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,11 +31,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${poppins.variable} ${hindSiliguri.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans text-ink selection:bg-magenta-light selection:text-magenta-dark">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

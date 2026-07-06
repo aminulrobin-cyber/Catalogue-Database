@@ -8,6 +8,7 @@ import {
   ExternalLink, AlertCircle, CheckCircle2, ChevronRight,
   Shield, LogOut, Eye, Clock, Key
 } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 export default function Dashboard() {
   const { data: session } = useSession();
@@ -112,14 +113,14 @@ export default function Dashboard() {
               </div>
             )}
             <div>
-              <h2 className="font-bold text-ink text-lg leading-tight">{userProfile.name}</h2>
-              <p className="text-sm text-ink-secondary">{userProfile.email}</p>
+              <h2 className="font-bold text-ink dark:text-white text-lg leading-tight">{userProfile.name}</h2>
+              <p className="text-sm text-ink-secondary dark:text-white/70">{userProfile.email}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isAdmin ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-brand-indigo-light text-brand-indigo border border-brand-indigo/20'}`}>
                   {isAdmin ? <Shield className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}
                   {userProfile.role}
                 </span>
-                <span className="text-xs font-medium text-ink-muted">
+                <span className="text-xs font-medium text-ink-muted dark:text-white/50">
                   • {userProfile.login_count} logins • {userProfile.sections_viewed || 0} sections viewed
                 </span>
               </div>
@@ -147,7 +148,8 @@ export default function Dashboard() {
                 <Shield className="w-4 h-4" /> Admin Panel
               </Link>
             )}
-            <button onClick={() => signOut()} className="p-2 text-ink-muted hover:text-brand-coral bg-white/30 backdrop-blur-sm rounded-xl transition-hover border border-white/40" title="Sign Out">
+            <ThemeToggle />
+            <button onClick={() => signOut()} className="p-2 text-ink-muted dark:text-white/80 hover:text-brand-coral bg-white/30 dark:bg-black/30 backdrop-blur-sm rounded-xl transition-hover border border-white/40 dark:border-white/20" title="Sign Out">
               <LogOut className="w-5 h-5" />
             </button>
           </div>
@@ -190,20 +192,20 @@ export default function Dashboard() {
 
       {/* Sheets Grid */}
       <div className="space-y-6">
-        <h2 className="text-xl font-bold text-ink">Imported Sheets</h2>
+        <h2 className="text-xl font-bold text-ink dark:text-white">Imported Sheets</h2>
         
         {loading ? (
-          <div className="py-12 flex flex-col items-center justify-center text-ink-muted">
-            <Loader2 className="w-8 h-8 animate-spin mb-4 text-brand-indigo" />
+          <div className="py-12 flex flex-col items-center justify-center text-ink-muted dark:text-white/60">
+            <Loader2 className="w-8 h-8 animate-spin mb-4 text-brand-indigo dark:text-brand-indigo-light" />
             <p className="font-medium">Loading your sheets...</p>
           </div>
         ) : sheets.length === 0 ? (
           <div className="py-20 glass-panel rounded-2xl flex flex-col items-center justify-center text-center px-4">
-            <div className="w-20 h-20 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center mb-5 border border-white/60">
-              <FileSpreadsheet className="w-10 h-10 text-brand-indigo" />
+            <div className="w-20 h-20 bg-white/50 dark:bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center mb-5 border border-white/60 dark:border-white/20">
+              <FileSpreadsheet className="w-10 h-10 text-brand-indigo dark:text-brand-indigo-light" />
             </div>
-            <h3 className="text-xl font-bold text-ink mb-2">No Sheets Imported</h3>
-            <p className="text-ink-secondary font-medium max-w-md">
+            <h3 className="text-xl font-bold text-ink dark:text-white mb-2">No Sheets Imported</h3>
+            <p className="text-ink-secondary dark:text-white/70 font-medium max-w-md">
               Paste one or more Google Sheet URLs above and click "Import Sheets" to begin tracking your classes.
             </p>
           </div>
@@ -214,17 +216,17 @@ export default function Dashboard() {
                 <div className="glass-card rounded-[16px] p-6 h-full flex flex-col relative overflow-hidden group-focus:border-brand-magenta">
                   
                   <div className="flex items-start justify-between mb-5">
-                    <div className="bg-white/50 backdrop-blur-sm p-3 rounded-xl border border-white/60">
-                      <FileSpreadsheet className="w-6 h-6 text-brand-indigo" />
+                    <div className="bg-white/50 dark:bg-black/40 backdrop-blur-sm p-3 rounded-xl border border-white/60 dark:border-white/20">
+                      <FileSpreadsheet className="w-6 h-6 text-brand-indigo dark:text-brand-indigo-light" />
                     </div>
-                    <div className="flex items-center gap-1.5 bg-white/40 backdrop-blur-sm border border-white/50 px-3 py-1.5 rounded-full">
-                      <span className="text-xs font-bold text-brand-indigo uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 bg-white/40 dark:bg-black/30 backdrop-blur-sm border border-white/50 dark:border-white/20 px-3 py-1.5 rounded-full">
+                      <span className="text-xs font-bold text-brand-indigo dark:text-brand-indigo-light uppercase tracking-wider">
                         {sheet.total_entries} Classes
                       </span>
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-bold text-ink line-clamp-2 mb-3 group-hover:text-brand-indigo transition-hover">
+                  <h3 className="text-lg font-bold text-ink dark:text-white line-clamp-2 mb-3 group-hover:text-brand-indigo dark:group-hover:text-brand-indigo-light transition-hover">
                     {sheet.title}
                   </h3>
                   
@@ -243,8 +245,8 @@ export default function Dashboard() {
                       )}
                     </div>
                     
-                    <div className="w-8 h-8 rounded-full bg-white/40 flex items-center justify-center group-hover:bg-brand-magenta-light transition-hover">
-                      <ChevronRight className="w-5 h-5 text-ink-muted group-hover:text-brand-magenta" />
+                    <div className="w-8 h-8 rounded-full bg-white/40 dark:bg-black/40 flex items-center justify-center group-hover:bg-brand-magenta-light dark:group-hover:bg-brand-magenta transition-hover">
+                      <ChevronRight className="w-5 h-5 text-ink-muted dark:text-white/60 group-hover:text-brand-magenta dark:group-hover:text-white" />
                     </div>
                   </div>
                 </div>

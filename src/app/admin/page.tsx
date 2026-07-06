@@ -7,6 +7,7 @@ import {
   ArrowLeft, Shield, ShieldCheck, Eye, Users, Clock, 
   Loader2, Crown, RefreshCw
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -66,8 +67,8 @@ export default function AdminPage() {
       <div className="min-h-screen flex items-center justify-center bg-paper p-4">
         <div className="glass-panel rounded-2xl p-8 text-center max-w-md space-y-4">
           <Shield className="w-12 h-12 text-brand-coral mx-auto" />
-          <h1 className="text-xl font-bold text-ink">Admin Access Required</h1>
-          <p className="text-sm text-ink-secondary">You don't have permission to view this page.</p>
+          <h1 className="text-xl font-bold text-ink dark:text-white">Admin Access Required</h1>
+          <p className="text-sm text-ink-secondary dark:text-white/70">You don't have permission to view this page.</p>
           <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 bg-brand-indigo/80 backdrop-blur-sm border border-white/20 text-white rounded-xl font-bold text-sm transition-hover hover:bg-brand-indigo">
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </Link>
@@ -80,13 +81,18 @@ export default function AdminPage() {
     <div className="max-w-[1000px] mx-auto p-4 sm:p-6 lg:p-8 space-y-8 font-sans">
       {/* Header */}
       <header className="glass-header rounded-[20px] p-6 md:p-8">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-indigo-light/70 hover:text-white mb-5 transition-hover">
-          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-        </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
-          <Users className="w-8 h-8" />
-          Admin Panel
-        </h1>
+        <div className="flex justify-between items-start">
+          <div>
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-indigo-light/70 hover:text-white mb-5 transition-hover">
+              <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+            </Link>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+              <Users className="w-8 h-8" />
+              Admin Panel
+            </h1>
+          </div>
+          <ThemeToggle />
+        </div>
         <p className="text-sm text-brand-indigo-light/80 mt-2">
           Manage user roles and view login activity. Only <strong>@shikho.com</strong> accounts can access the app.
         </p>
@@ -106,8 +112,8 @@ export default function AdminPage() {
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-xs font-bold text-ink-muted uppercase tracking-wider">{stat.label}</p>
-                <p className="text-2xl font-black text-ink">{stat.value}</p>
+                <p className="text-xs font-bold text-ink-muted dark:text-white/60 uppercase tracking-wider">{stat.label}</p>
+                <p className="text-2xl font-black text-ink dark:text-white">{stat.value}</p>
               </div>
             </div>
           ))}
@@ -117,14 +123,14 @@ export default function AdminPage() {
       {/* User Table */}
       <div className="glass-table flex flex-col">
         <div className="px-6 py-4 glass-table-header flex items-center justify-between">
-          <h2 className="font-bold text-ink text-lg">All Users</h2>
-          <button onClick={fetchUsers} className="p-2 text-ink-muted hover:text-brand-indigo rounded-xl transition-hover">
+          <h2 className="font-bold text-ink dark:text-white text-lg">All Users</h2>
+          <button onClick={fetchUsers} className="p-2 text-ink-muted dark:text-white/80 hover:text-brand-indigo dark:hover:text-brand-indigo-light rounded-xl transition-hover">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="glass-table-header text-xs uppercase font-bold text-ink tracking-wider">
+            <thead className="glass-table-header text-xs uppercase font-bold text-ink dark:text-white tracking-wider">
               <tr>
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Email</th>
@@ -136,8 +142,9 @@ export default function AdminPage() {
             <tbody className="divide-y divide-ink-muted/10">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-brand-indigo" />
+                  <td colSpan={5} className="px-6 py-12 text-center text-ink-muted dark:text-white/60">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3 text-brand-indigo dark:text-brand-indigo-light" />
+                    <span>Loading users...</span>
                   </td>
                 </tr>
               ) : users.map((user) => {
@@ -154,7 +161,7 @@ export default function AdminPage() {
                           </div>
                         )}
                         <div>
-                          <p className="font-bold text-ink text-sm">{user.name || '—'}</p>
+                          <p className="font-bold text-ink dark:text-white text-sm">{user.name || '—'}</p>
                           {isPrimary ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-black text-brand-sunrise uppercase">
                               <Crown className="w-3 h-3" /> Primary Admin
@@ -169,7 +176,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-ink-secondary font-medium text-sm">{user.email}</td>
+                    <td className="px-6 py-4 text-ink-secondary dark:text-white/70 font-medium text-sm">{user.email}</td>
                     <td className="px-6 py-4 text-center">
                       {isPrimary ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -191,11 +198,11 @@ export default function AdminPage() {
                         </select>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-ink-secondary text-sm font-medium">
+                    <td className="px-6 py-4 text-ink-secondary dark:text-white/70 text-sm font-medium">
                       {new Date(user.last_login).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="font-bold text-ink">{user.login_count}</span>
+                      <span className="font-bold text-ink dark:text-white">{user.login_count}</span>
                     </td>
                   </tr>
                 );
