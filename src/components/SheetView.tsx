@@ -453,12 +453,12 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
             { value: filterTeacher, setter: setFilterTeacher, defaultText: 'All Teachers', options: uniqueTeachers },
             { value: filterBatch, setter: setFilterBatch, defaultText: 'All Batches', options: uniqueBatches },
           ].map((selectProps, i) => (
-             <select key={i} className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={selectProps.value} onChange={e => selectProps.setter(e.target.value)}>
+             <select key={i} className="bg-white/50 dark:bg-black/40 backdrop-blur-sm border border-white/60 dark:border-white/20 rounded-xl px-4 py-3 text-sm font-semibold text-ink dark:text-white outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={selectProps.value} onChange={e => selectProps.setter(e.target.value)}>
                <option value="">{selectProps.defaultText}</option>
                {selectProps.options.map(o => <option key={o} value={o}>{o}</option>)}
              </select>
           ))}
-          <select className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <select className="bg-white/50 dark:bg-black/40 backdrop-blur-sm border border-white/60 dark:border-white/20 rounded-xl px-4 py-3 text-sm font-semibold text-ink dark:text-white outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="ok">OK / Approved</option>
             <option value="error">Fix Needed</option>

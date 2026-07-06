@@ -33,18 +33,7 @@
 
 body {
   font-family: var(--font-sans);
-  color: var(--color-ink);
-  /* Liquid Glass animated background */
-  background: linear-gradient(-45deg, var(--color-brand-indigo-light), #E2E4F6, var(--color-brand-magenta-light), #FDF5FA);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
-  min-height: 100vh;
-}
-
-.dark body {
-  color: #FFFFFF;
-  background: linear-gradient(-45deg, #090B14, #1B2856, #0A040B, #304090);
-  background-size: 400% 400%;
+  background-color: transparent;
 }
 
 @keyframes gradientBG {
@@ -68,15 +57,15 @@ body {
   
   /* Liquid Glass Classes */
   .glass-panel {
-    @apply bg-white/40 dark:bg-black/20 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-ambient;
+    @apply bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/60 dark:border-white/10 shadow-ambient;
   }
   
   .glass-header {
-    @apply bg-brand-indigo/80 dark:bg-brand-indigo-dark/60 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-ambient;
+    @apply bg-brand-indigo/80 dark:bg-brand-indigo-dark/60 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-ambient;
   }
   
   .glass-card {
-    @apply bg-white/40 dark:bg-black/30 backdrop-blur-xl border-2 border-white/50 dark:border-white/5 shadow-ambient transition-all duration-300;
+    @apply bg-white/40 dark:bg-black/30 backdrop-blur-sm border-2 border-white/50 dark:border-white/5 shadow-ambient transition-all duration-300;
   }
   
   .glass-card:hover {
@@ -88,11 +77,11 @@ body {
   }
   
   .glass-table {
-    @apply bg-white/30 dark:bg-black/20 backdrop-blur-2xl border border-white/50 dark:border-white/10 rounded-2xl overflow-hidden shadow-ambient;
+    @apply bg-white/30 dark:bg-black/20 backdrop-blur-md border border-white/50 dark:border-white/10 rounded-2xl overflow-hidden shadow-ambient;
   }
   
   .glass-table-header {
-    @apply bg-white/40 dark:bg-black/40 backdrop-blur-2xl border-b border-white/50 dark:border-white/10;
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-md border-b border-white/50 dark:border-white/10;
   }
   
   .glass-table-row {
