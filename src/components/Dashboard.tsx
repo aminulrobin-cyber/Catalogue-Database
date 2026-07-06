@@ -102,7 +102,7 @@ export default function Dashboard() {
       
       {/* User Profile Bar */}
       {userProfile && (
-        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-ambient flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-ink-muted/10">
+        <div className="glass-panel rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {userProfile.image ? (
               <img src={userProfile.image} alt="" className="w-12 h-12 rounded-full ring-2 ring-brand-indigo/20" />
@@ -147,7 +147,7 @@ export default function Dashboard() {
                 <Shield className="w-4 h-4" /> Admin Panel
               </Link>
             )}
-            <button onClick={() => signOut()} className="p-2 text-ink-muted hover:text-brand-coral bg-surface rounded-xl transition-hover" title="Sign Out">
+            <button onClick={() => signOut()} className="p-2 text-ink-muted hover:text-brand-coral bg-white/30 backdrop-blur-sm rounded-xl transition-hover border border-white/40" title="Sign Out">
               <LogOut className="w-5 h-5" />
             </button>
           </div>
@@ -155,7 +155,7 @@ export default function Dashboard() {
       )}
 
       {/* Header Area using 70% Indigo influence */}
-      <header className="bg-brand-indigo rounded-2xl p-6 md:p-10 shadow-ambient flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <header className="glass-header rounded-2xl p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
             <LayoutDashboard className="w-8 h-8 text-brand-magenta-light" />
@@ -171,7 +171,7 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full md:w-auto">
             <textarea 
               placeholder="Paste Google Sheet URLs (one per line)..." 
-              className="text-sm bg-white text-ink border-0 rounded-xl px-4 py-3 w-full sm:w-72 resize-none h-[48px] focus:ring-2 focus:ring-brand-magenta outline-none transition-hover placeholder:text-ink-muted shadow-ambient"
+              className="text-sm bg-white/70 backdrop-blur-sm text-ink border border-white/50 rounded-xl px-4 py-3 w-full sm:w-72 resize-none h-[48px] focus:ring-2 focus:ring-brand-magenta outline-none transition-hover placeholder:text-ink-muted shadow-ambient"
               value={urlsInput}
               onChange={(e) => setUrlsInput(e.target.value)}
               rows={1}
@@ -198,8 +198,8 @@ export default function Dashboard() {
             <p className="font-medium">Loading your sheets...</p>
           </div>
         ) : sheets.length === 0 ? (
-          <div className="py-20 bg-surface border border-brand-indigo-light rounded-2xl flex flex-col items-center justify-center text-center px-4 shadow-ambient">
-            <div className="w-20 h-20 bg-brand-indigo-light rounded-full flex items-center justify-center mb-5">
+          <div className="py-20 glass-panel rounded-2xl flex flex-col items-center justify-center text-center px-4">
+            <div className="w-20 h-20 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center mb-5 border border-white/60">
               <FileSpreadsheet className="w-10 h-10 text-brand-indigo" />
             </div>
             <h3 className="text-xl font-bold text-ink mb-2">No Sheets Imported</h3>
@@ -211,13 +211,13 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sheets.map((sheet) => (
               <Link key={sheet._id} href={`/sheet/${sheet.sheet_id}`} className="group block outline-none">
-                <div className="bg-white border-2 border-transparent group-hover:border-brand-magenta/20 group-focus:border-brand-magenta rounded-[16px] p-6 shadow-ambient group-hover:shadow-ambient-hover transition-hover h-full flex flex-col relative overflow-hidden">
+                <div className="glass-card rounded-[16px] p-6 h-full flex flex-col relative overflow-hidden group-focus:border-brand-magenta">
                   
                   <div className="flex items-start justify-between mb-5">
-                    <div className="bg-brand-indigo-light p-3 rounded-xl">
+                    <div className="bg-white/50 backdrop-blur-sm p-3 rounded-xl border border-white/60">
                       <FileSpreadsheet className="w-6 h-6 text-brand-indigo" />
                     </div>
-                    <div className="flex items-center gap-1.5 bg-surface border border-brand-indigo-light px-3 py-1.5 rounded-full">
+                    <div className="flex items-center gap-1.5 bg-white/40 backdrop-blur-sm border border-white/50 px-3 py-1.5 rounded-full">
                       <span className="text-xs font-bold text-brand-indigo uppercase tracking-wider">
                         {sheet.total_entries} Classes
                       </span>
@@ -228,7 +228,7 @@ export default function Dashboard() {
                     {sheet.title}
                   </h3>
                   
-                  <div className="mt-auto pt-5 flex items-center justify-between border-t border-brand-indigo-light/50">
+                  <div className="mt-auto pt-5 flex items-center justify-between border-t border-white/40">
                     <div className="flex items-center gap-2">
                       {sheet.error_count > 0 ? (
                         <div className="flex items-center gap-2 text-sm font-semibold text-brand-coral">
@@ -243,7 +243,7 @@ export default function Dashboard() {
                       )}
                     </div>
                     
-                    <div className="w-8 h-8 rounded-full bg-surface flex items-center justify-center group-hover:bg-brand-magenta-light transition-hover">
+                    <div className="w-8 h-8 rounded-full bg-white/40 flex items-center justify-center group-hover:bg-brand-magenta-light transition-hover">
                       <ChevronRight className="w-5 h-5 text-ink-muted group-hover:text-brand-magenta" />
                     </div>
                   </div>

@@ -329,7 +329,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
   return (
     <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-8 transition-page font-sans">
       {/* Header */}
-      <header className="bg-brand-indigo rounded-[20px] p-6 md:p-8 shadow-ambient flex flex-col md:flex-row md:items-start justify-between gap-6">
+      <header className="glass-header rounded-[20px] p-6 md:p-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
         <div>
           <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-indigo-light/70 hover:text-white mb-5 transition-hover outline-none focus-visible:ring-2 focus-visible:ring-brand-magenta rounded-lg px-1">
             <ArrowLeft className="w-4 h-4" />
@@ -373,7 +373,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
       </header>
 
       {/* ═══════════════ STATUS BAR ═══════════════ */}
-      <div className="bg-white rounded-2xl shadow-ambient overflow-hidden">
+      <div className="glass-panel rounded-2xl overflow-hidden p-0 border border-white/60">
         {/* Progress bar */}
         <div className="h-2 flex w-full">
           {statusCounts.total > 0 && (
@@ -389,11 +389,11 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
         {/* Status counts */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-ink-muted/10">
           {[
-            { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo', bg: 'bg-brand-indigo-light' },
-            { label: 'Approved', value: statusCounts.ok, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Pending', value: statusCounts.pending, icon: Clock, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
-            { label: 'Fix Needed', value: statusCounts.issues, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light' },
-            { label: 'Duplicates', value: statusCounts.duplicates, icon: FileText, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
+            { label: 'Total Classes', value: statusCounts.total, icon: Database, color: 'text-brand-indigo', bg: 'bg-white/40' },
+            { label: 'Approved', value: statusCounts.ok, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
+            { label: 'Pending', value: statusCounts.pending, icon: Clock, color: 'text-brand-sunrise-dark', bg: 'bg-brand-sunrise-light/50' },
+            { label: 'Fix Needed', value: statusCounts.issues, icon: AlertCircle, color: 'text-brand-coral', bg: 'bg-brand-coral-light/50' },
+            { label: 'Duplicates', value: statusCounts.duplicates, icon: FileText, color: 'text-brand-sunrise-dark', bg: 'bg-brand-sunrise-light/50' },
           ].map((stat, i) => (
             <div key={i} className="flex items-center gap-4 px-5 py-5">
               <div className={`p-3 rounded-xl ${stat.bg} shrink-0`}>
@@ -409,7 +409,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
       </div>
 
       {/* Filters Area */}
-      <div className="bg-white rounded-2xl p-5 shadow-ambient flex flex-col gap-5">
+      <div className="glass-panel rounded-2xl p-5 flex flex-col gap-5">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative w-full sm:w-72">
@@ -417,7 +417,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
               <input 
                 type="text" 
                 placeholder="Search Class ID..."
-                className="w-full bg-surface border-0 rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-ink focus:ring-2 focus:ring-brand-indigo outline-none transition-hover placeholder:text-ink-muted"
+                className="w-full glass-input rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-ink focus:ring-2 focus:ring-brand-indigo outline-none transition-hover placeholder:text-ink-muted"
                 value={searchClassId}
                 onChange={e => setSearchClassId(e.target.value)}
               />
@@ -453,12 +453,12 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
             { value: filterTeacher, setter: setFilterTeacher, defaultText: 'All Teachers', options: uniqueTeachers },
             { value: filterBatch, setter: setFilterBatch, defaultText: 'All Batches', options: uniqueBatches },
           ].map((selectProps, i) => (
-             <select key={i} className="bg-surface border-0 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={selectProps.value} onChange={e => selectProps.setter(e.target.value)}>
+             <select key={i} className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={selectProps.value} onChange={e => selectProps.setter(e.target.value)}>
                <option value="">{selectProps.defaultText}</option>
                {selectProps.options.map(o => <option key={o} value={o}>{o}</option>)}
              </select>
           ))}
-          <select className="bg-surface border-0 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <select className="bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-2 focus:ring-brand-indigo transition-hover cursor-pointer" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="ok">OK / Approved</option>
             <option value="error">Fix Needed</option>
@@ -468,10 +468,10 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
       </div>
 
       {/* Data Table */}
-      <div className="bg-white rounded-[20px] shadow-ambient overflow-hidden flex flex-col">
+      <div className="glass-table flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-ink-secondary">
-            <thead className="bg-surface border-b border-ink-muted/10 text-xs uppercase font-bold text-ink tracking-wider">
+            <thead className="glass-table-header text-xs uppercase font-bold text-ink tracking-wider">
               <tr>
                 <th className="px-5 py-5">Date</th>
                 <th className="px-5 py-5">Subject</th>
@@ -500,7 +500,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
                 </tr>
               ) : (
                 filteredEntries.map((entry, idx) => (
-                  <tr key={entry._id || idx} className="hover:bg-brand-indigo-light/30 transition-hover">
+                  <tr key={entry._id || idx} className="glass-table-row">
                     <td className="px-5 py-4 whitespace-nowrap font-medium text-ink">
                       {entry.date || '-'}
                     </td>
@@ -539,7 +539,7 @@ export default function SheetView({ sheetId }: { sheetId: string }) {
             </tbody>
           </table>
         </div>
-        <div className="px-6 py-4 border-t border-ink-muted/10 bg-surface text-sm font-bold text-ink-secondary flex justify-between items-center">
+        <div className="px-6 py-4 border-t border-white/50 bg-white/40 text-sm font-bold text-ink-secondary flex justify-between items-center">
           <span>Showing {filteredEntries.length} of {entries.length} entries</span>
           {filteredEntries.length !== entries.length && (
             <button onClick={clearFilters} className="text-brand-magenta hover:text-brand-magenta-dark text-xs font-bold transition-hover">

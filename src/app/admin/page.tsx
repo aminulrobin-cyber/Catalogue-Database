@@ -64,11 +64,11 @@ export default function AdminPage() {
   if (role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper p-4">
-        <div className="bg-white rounded-2xl shadow-ambient p-8 text-center max-w-md space-y-4">
+        <div className="glass-panel rounded-2xl p-8 text-center max-w-md space-y-4">
           <Shield className="w-12 h-12 text-brand-coral mx-auto" />
           <h1 className="text-xl font-bold text-ink">Admin Access Required</h1>
           <p className="text-sm text-ink-secondary">You don't have permission to view this page.</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 bg-brand-indigo text-white rounded-xl font-bold text-sm transition-hover hover:bg-brand-indigo-dark">
+          <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 bg-brand-indigo/80 backdrop-blur-sm border border-white/20 text-white rounded-xl font-bold text-sm transition-hover hover:bg-brand-indigo">
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </Link>
         </div>
@@ -79,7 +79,7 @@ export default function AdminPage() {
   return (
     <div className="max-w-[1000px] mx-auto p-4 sm:p-6 lg:p-8 space-y-8 font-sans">
       {/* Header */}
-      <header className="bg-brand-indigo rounded-[20px] p-6 md:p-8 shadow-ambient">
+      <header className="glass-header rounded-[20px] p-6 md:p-8">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-indigo-light/70 hover:text-white mb-5 transition-hover">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
@@ -93,13 +93,13 @@ export default function AdminPage() {
       </header>
 
       {/* Stats */}
-      <div className="bg-white rounded-2xl shadow-ambient overflow-hidden">
+      <div className="glass-panel rounded-2xl overflow-hidden p-0 border border-white/60">
         <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-ink-muted/10">
           {[
-            { label: 'Total Users', value: users.length, icon: Users, color: 'text-brand-indigo', bg: 'bg-brand-indigo-light' },
-            { label: 'Admins', value: users.filter(u => u.role === 'admin').length, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Viewers', value: users.filter(u => u.role === 'viewer').length, icon: Eye, color: 'text-brand-sunrise', bg: 'bg-brand-sunrise-light' },
-            { label: 'Active Today', value: users.filter(u => { const d = new Date(u.last_login); const now = new Date(); return d.toDateString() === now.toDateString(); }).length, icon: Clock, color: 'text-brand-magenta', bg: 'bg-brand-magenta-light' },
+            { label: 'Total Users', value: users.length, icon: Users, color: 'text-brand-indigo', bg: 'bg-white/40' },
+            { label: 'Admins', value: users.filter(u => u.role === 'admin').length, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
+            { label: 'Viewers', value: users.filter(u => u.role === 'viewer').length, icon: Eye, color: 'text-brand-sunrise-dark', bg: 'bg-brand-sunrise-light/50' },
+            { label: 'Active Today', value: users.filter(u => { const d = new Date(u.last_login); const now = new Date(); return d.toDateString() === now.toDateString(); }).length, icon: Clock, color: 'text-brand-magenta', bg: 'bg-brand-magenta-light/50' },
           ].map((stat, i) => (
             <div key={i} className="flex items-center gap-3 px-5 py-5">
               <div className={`p-3 rounded-xl ${stat.bg} shrink-0`}>
@@ -115,8 +115,8 @@ export default function AdminPage() {
       </div>
 
       {/* User Table */}
-      <div className="bg-white rounded-[20px] shadow-ambient overflow-hidden">
-        <div className="px-6 py-4 border-b border-ink-muted/10 flex items-center justify-between">
+      <div className="glass-table flex flex-col">
+        <div className="px-6 py-4 glass-table-header flex items-center justify-between">
           <h2 className="font-bold text-ink text-lg">All Users</h2>
           <button onClick={fetchUsers} className="p-2 text-ink-muted hover:text-brand-indigo rounded-xl transition-hover">
             <RefreshCw className="w-4 h-4" />
@@ -124,7 +124,7 @@ export default function AdminPage() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-surface border-b border-ink-muted/10 text-xs uppercase font-bold text-ink tracking-wider">
+            <thead className="glass-table-header text-xs uppercase font-bold text-ink tracking-wider">
               <tr>
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Email</th>
@@ -143,7 +143,7 @@ export default function AdminPage() {
               ) : users.map((user) => {
                 const isPrimary = user.email === 'aminul.robin@shikho.com';
                 return (
-                  <tr key={user._id} className="hover:bg-brand-indigo-light/30 transition-hover">
+                  <tr key={user._id} className="glass-table-row">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {user.image ? (

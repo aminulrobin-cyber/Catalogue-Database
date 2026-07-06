@@ -31,8 +31,18 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-paper);
   color: var(--color-ink);
+  /* Liquid Glass animated background */
+  background: linear-gradient(-45deg, var(--color-brand-indigo-light), #E2E4F6, var(--color-brand-magenta-light), #FDF5FA);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  min-height: 100vh;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @layer utilities {
@@ -46,5 +56,38 @@ body {
     transition-property: all;
     transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
     transition-duration: 140ms;
+  }
+  
+  /* Liquid Glass Classes */
+  .glass-panel {
+    @apply bg-white/40 backdrop-blur-xl border border-white/60 shadow-ambient;
+  }
+  
+  .glass-header {
+    @apply bg-brand-indigo/80 backdrop-blur-xl border border-white/20 shadow-ambient;
+  }
+  
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-md border-2 border-white/50 shadow-ambient transition-all duration-300;
+  }
+  
+  .glass-card:hover {
+    @apply bg-white/60 border-brand-magenta/40 shadow-ambient-hover transform -translate-y-1;
+  }
+  
+  .glass-input {
+    @apply bg-white/50 backdrop-blur-sm border border-white/60;
+  }
+  
+  .glass-table {
+    @apply bg-white/30 backdrop-blur-lg border border-white/50 rounded-2xl overflow-hidden shadow-ambient;
+  }
+  
+  .glass-table-header {
+    @apply bg-white/40 backdrop-blur-xl border-b border-white/50;
+  }
+  
+  .glass-table-row {
+    @apply border-b border-white/30 hover:bg-white/50 transition-colors duration-200;
   }
 }
