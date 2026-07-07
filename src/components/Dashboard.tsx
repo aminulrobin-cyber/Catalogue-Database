@@ -8,13 +8,23 @@ import {
   ExternalLink, AlertCircle, CheckCircle2, ChevronRight,
   Shield, LogOut, Eye, Clock, Key
 } from 'lucide-react';
+import { 
+  DndContext, closestCenter, KeyboardSensor, 
+  PointerSensor, useSensor, useSensors 
+} from '@dnd-kit/core';
+import { 
+  arrayMove, SortableContext, sortableKeyboardCoordinates, 
+  rectSortingStrategy 
+} from '@dnd-kit/sortable';
 import ThemeToggle from './ThemeToggle';
+import SortableSheetCard from './SortableSheetCard';
 
 export default function Dashboard() {
   const { data: session } = useSession();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [requesting, setRequesting] = useState(false);
   const [sheets, setSheets] = useState<any[]>([]);
+  const [sheetOrder, setSheetOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [urlsInput, setUrlsInput] = useState('');
@@ -48,6 +58,46 @@ export default function Dashboard() {
     fetchSheets();
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (sheets.length > 0) {
+      const stored = localStorage.getItem('sheetOrder');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          const validOrder = parsed.filter((id: string) => sheets.some(s => s._id === id));
+          const newSheets = sheets.filter(s => !parsed.includes(s._id)).map(s => s._id);
+          setSheetOrder([...validOrder, ...newSheets]);
+        } catch (e) {
+          setSheetOrder(sheets.map(s => s._id));
+        }
+      } else {
+        setSheetOrder(sheets.map(s => s._id));
+      }
+    }
+  }, [sheets]);
+
+  const sortedSheets = React.useMemo(() => {
+    if (!sheetOrder.length || sheets.length === 0) return sheets;
+    const map = new Map(sheets.map(s => [s._id, s]));
+    return sheetOrder.map(id => map.get(id)).filter(Boolean);
+  }, [sheets, sheetOrder]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = sheetOrder.indexOf(active.id);
+      const newIndex = sheetOrder.indexOf(over.id);
+      const newOrder = arrayMove(sheetOrder, oldIndex, newIndex);
+      setSheetOrder(newOrder);
+      localStorage.setItem('sheetOrder', JSON.stringify(newOrder));
+    }
+  };
 
   const handleRequestAdmin = async () => {
     setRequesting(true);
@@ -210,51 +260,17 @@ export default function Dashboard() {
             </p>
           </div>
         ) : (
-          <div className="dark:chromatic-wrapper">
-            <div className="dark:chromatic-content grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 dark:p-6">
-              {sheets.map((sheet) => (
-                <Link key={sheet._id} href={`/sheet/${sheet.sheet_id}`} className="group block outline-none">
-                  <div className="glass-card rounded-[16px] p-6 h-full flex flex-col relative overflow-hidden group-focus:border-brand-magenta dark:group-focus:border-white">
-                    
-                    <div className="flex items-start justify-between mb-5">
-                      <div className="bg-white/50 dark:bg-white/5 backdrop-blur-sm p-3 rounded-xl border border-white/60 dark:border-white/10">
-                        <FileSpreadsheet className="w-6 h-6 text-brand-indigo dark:text-white" />
-                      </div>
-                      <div className="flex items-center gap-1.5 bg-white/40 dark:bg-white/5 backdrop-blur-sm border border-white/50 dark:border-white/10 px-3 py-1.5 rounded-full">
-                        <span className="text-xs font-bold text-brand-indigo dark:text-white uppercase tracking-wider">
-                          {sheet.total_entries} Classes
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 className="text-lg font-bold text-ink dark:text-white line-clamp-2 mb-3 group-hover:text-brand-indigo transition-hover">
-                      {sheet.title}
-                    </h3>
-                    
-                    <div className="mt-auto pt-5 flex items-center justify-between border-t border-white/40 dark:border-white/10">
-                      <div className="flex items-center gap-2">
-                        {sheet.error_count > 0 ? (
-                          <div className="flex items-center gap-2 text-sm font-semibold text-brand-coral">
-                            <AlertCircle className="w-5 h-5" />
-                            <span>{sheet.error_count} Errors</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
-                            <CheckCircle2 className="w-5 h-5" />
-                            <span>All Valid</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="w-8 h-8 rounded-full bg-white/40 dark:bg-white/10 flex items-center justify-center group-hover:bg-brand-magenta-light dark:group-hover:bg-white transition-hover">
-                        <ChevronRight className="w-5 h-5 text-ink-muted dark:text-white/60 group-hover:text-brand-magenta dark:group-hover:text-black" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <div className="dark:chromatic-wrapper">
+              <SortableContext items={sheetOrder} strategy={rectSortingStrategy}>
+                <div className="dark:chromatic-content grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 dark:p-6">
+                  {sortedSheets.map((sheet: any) => (
+                    <SortableSheetCard key={sheet._id} sheet={sheet} />
+                  ))}
+                </div>
+              </SortableContext>
             </div>
-          </div>
+          </DndContext>
         )}
       </div>
     </div>
