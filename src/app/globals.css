@@ -3,9 +3,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-brand-indigo: #304090;
-  --color-brand-indigo-dark: #1B2856;
-  --color-brand-indigo-light: #F1F2FB;
+  --color-brand-indigo: #475569; /* Slate 600 (Ash) */
+  --color-brand-indigo-dark: #1E293B; /* Slate 800 (Dark Ash) */
+  --color-brand-indigo-light: #F1F5F9; /* Slate 100 (Light Ash) */
   
   --color-brand-magenta: #C02080;
   --color-brand-magenta-dark: #A01868;
