@@ -2,10 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FileSpreadsheet, AlertCircle, CheckCircle2, ChevronRight, GripHorizontal } from 'lucide-react';
+import { FileSpreadsheet, AlertCircle, CheckCircle2, ChevronRight, GripHorizontal, Archive, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function SortableSheetCard({ sheet }: { sheet: any }) {
+export default function SortableSheetCard({ sheet, onArchiveToggle }: { sheet: any, onArchiveToggle?: (id: string, is_previous_year: boolean) => void }) {
   const {
     attributes,
     listeners,
@@ -20,6 +20,14 @@ export default function SortableSheetCard({ sheet }: { sheet: any }) {
     transition,
     zIndex: isDragging ? 50 : 1,
     position: 'relative' as const,
+  };
+
+  const handleArchiveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onArchiveToggle) {
+      onArchiveToggle(sheet.sheet_id, !sheet.is_previous_year);
+    }
   };
 
   return (
@@ -48,14 +56,23 @@ export default function SortableSheetCard({ sheet }: { sheet: any }) {
               <FileSpreadsheet className="w-6 h-6 text-brand-indigo dark:text-white" />
             </div>
           </div>
-          <div className="flex items-center gap-1.5 bg-white/40 dark:bg-white/5 backdrop-blur-sm border border-white/50 dark:border-white/10 px-3 py-1.5 rounded-full">
-            <span className="text-xs font-bold text-brand-indigo dark:text-white uppercase tracking-wider">
-              {sheet.total_entries} Classes
-            </span>
+          <div className="flex items-center gap-2 relative z-20">
+            <div className="flex items-center gap-1.5 bg-white/40 dark:bg-white/5 backdrop-blur-sm border border-white/50 dark:border-white/10 px-3 py-1.5 rounded-full">
+              <span className="text-xs font-bold text-brand-indigo dark:text-white uppercase tracking-wider">
+                {sheet.total_entries} Classes
+              </span>
+            </div>
+            <button 
+              onClick={handleArchiveClick}
+              className="p-1.5 rounded-full bg-white/40 dark:bg-white/5 backdrop-blur-sm border border-white/50 dark:border-white/10 text-ink-muted hover:text-brand-magenta dark:text-white/60 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10 transition-colors"
+              title={sheet.is_previous_year ? "Move to Home" : "Move to Previous Year"}
+            >
+              {sheet.is_previous_year ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
-        <h3 className="text-lg font-bold text-ink dark:text-white line-clamp-2 mb-3 group-hover:text-brand-indigo transition-hover">
+        <h3 className="text-lg font-bold text-ink dark:text-white line-clamp-2 mb-3 group-hover:text-brand-indigo transition-hover relative z-10">
           <Link href={`/sheet/${sheet.sheet_id}`} className="outline-none before:absolute before:inset-0">
             {sheet.title}
           </Link>

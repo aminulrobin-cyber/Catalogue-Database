@@ -7,6 +7,7 @@ export interface ISheetTracker extends Document {
   total_entries: number;
   error_count: number;
   last_synced: Date;
+  is_previous_year: boolean;
 }
 
 const SheetTrackerSchema: Schema = new Schema({
@@ -16,6 +17,7 @@ const SheetTrackerSchema: Schema = new Schema({
   total_entries: { type: Number, default: 0 },
   error_count: { type: Number, default: 0 },
   last_synced: { type: Date, default: Date.now },
+  is_previous_year: { type: Boolean, default: false },
 });
 
 export default mongoose.models.SheetTracker || mongoose.model<ISheetTracker>('SheetTracker', SheetTrackerSchema);

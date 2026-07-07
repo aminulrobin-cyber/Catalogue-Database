@@ -4,9 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { 
-  LayoutDashboard, RefreshCw, Loader2, FileSpreadsheet, 
-  ExternalLink, AlertCircle, CheckCircle2, ChevronRight,
-  Shield, LogOut, Eye, Clock, Key, Archive
+  Archive, Loader2, FileSpreadsheet, 
+  Shield, LogOut, Eye, Clock, Key, ArrowLeft
 } from 'lucide-react';
 import { 
   DndContext, closestCenter, KeyboardSensor, 
@@ -16,18 +15,16 @@ import {
   arrayMove, SortableContext, sortableKeyboardCoordinates, 
   rectSortingStrategy 
 } from '@dnd-kit/sortable';
-import ThemeToggle from './ThemeToggle';
-import SortableSheetCard from './SortableSheetCard';
+import ThemeToggle from '@/components/ThemeToggle';
+import SortableSheetCard from '@/components/SortableSheetCard';
 
-export default function Dashboard() {
+export default function PreviousYearPage() {
   const { data: session } = useSession();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [requesting, setRequesting] = useState(false);
   const [sheets, setSheets] = useState<any[]>([]);
   const [sheetOrder, setSheetOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [urlsInput, setUrlsInput] = useState('');
 
   const fetchSheets = async () => {
     setLoading(true);
@@ -61,7 +58,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (sheets.length > 0) {
-      const stored = localStorage.getItem('sheetOrder');
+      const stored = localStorage.getItem('sheetOrderArchived');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
@@ -78,7 +75,7 @@ export default function Dashboard() {
   }, [sheets]);
 
   const sortedSheets = React.useMemo(() => {
-    const activeSheets = sheets.filter(s => !s.is_previous_year);
+    const activeSheets = sheets.filter(s => s.is_previous_year);
     if (!sheetOrder.length || activeSheets.length === 0) return activeSheets;
     const map = new Map(activeSheets.map(s => [s._id, s]));
     return sheetOrder.map(id => map.get(id)).filter(Boolean);
@@ -96,7 +93,7 @@ export default function Dashboard() {
       const newIndex = sheetOrder.indexOf(over.id);
       const newOrder = arrayMove(sheetOrder, oldIndex, newIndex);
       setSheetOrder(newOrder);
-      localStorage.setItem('sheetOrder', JSON.stringify(newOrder));
+      localStorage.setItem('sheetOrderArchived', JSON.stringify(newOrder));
     }
   };
 
@@ -122,13 +119,8 @@ export default function Dashboard() {
       const res = await fetch('/api/users/request-admin', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setUserProfile((prev: any) => ({ ...prev, admin_request: true }));
-        alert('Admin access requested successfully!');
-      } else {
-        alert(data.error);
+        fetchProfile();
       }
-    } catch (err: any) {
-      alert('Error: ' + err.message);
     } finally {
       setRequesting(false);
     }
@@ -136,38 +128,8 @@ export default function Dashboard() {
 
   const isAdmin = userProfile?.role === 'admin';
 
-  const handleSync = async () => {
-    if (!urlsInput.trim()) {
-      alert('Please enter at least one Google Sheet URL');
-      return;
-    }
-    
-    const urls = urlsInput.split('\n').map(u => u.trim()).filter(u => u);
-    
-    setSyncing(true);
-    try {
-      const res = await fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setUrlsInput('');
-        fetchSheets();
-      } else {
-        alert('Sync failed: ' + data.error);
-      }
-    } catch (err: any) {
-      alert('Error: ' + err.message);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 transition-page">
-      
       {/* User Profile Bar */}
       {userProfile && (
         <div className="glass-panel rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -227,59 +189,38 @@ export default function Dashboard() {
       <header className="glass-header rounded-2xl p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <LayoutDashboard className="w-8 h-8 text-brand-magenta-light" />
-            Catalogue Database
+            <Archive className="w-8 h-8 text-brand-magenta-light" />
+            Previous Year Resources
           </h1>
           <p className="mt-2 text-brand-indigo-light/90 font-medium">
-            Import and manage your Shikho class databases.
+            Archived classes and resources from previous years.
           </p>
         </div>
-        
-        {/* Sync Controls */}
-        {isAdmin && (
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full md:w-auto">
-            <textarea 
-              placeholder="Paste Google Sheet URLs (one per line)..." 
-              className="text-sm bg-white/70 backdrop-blur-sm text-ink border border-white/50 rounded-xl px-4 py-3 w-full sm:w-72 resize-none h-[48px] focus:ring-2 focus:ring-brand-magenta outline-none transition-hover placeholder:text-ink-muted shadow-ambient"
-              value={urlsInput}
-              onChange={(e) => setUrlsInput(e.target.value)}
-              rows={1}
-            />
-            <button 
-              onClick={handleSync} 
-              disabled={syncing}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-magenta dark:bg-white hover:bg-brand-magenta-dark dark:hover:bg-gray-200 text-white dark:text-black rounded-xl font-semibold transition-hover shadow-ambient disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap h-[48px]"
-            >
-              {syncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
-              {syncing ? 'Importing...' : 'Import Sheets'}
-            </button>
-          </div>
-        )}
       </header>
 
       {/* Sheets Grid */}
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-ink dark:text-white">Imported Sheets</h2>
-          <Link href="/previous-year" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-indigo dark:text-white/70 hover:text-brand-magenta dark:hover:text-white transition-colors">
-            <Archive className="w-4 h-4" />
-            Previous Year Resources
+          <h2 className="text-xl font-bold text-ink dark:text-white">Archived Sheets</h2>
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-indigo dark:text-white/70 hover:text-brand-magenta dark:hover:text-white transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
           </Link>
         </div>
         
         {loading ? (
           <div className="py-12 flex flex-col items-center justify-center text-ink-muted dark:text-white/60">
             <Loader2 className="w-8 h-8 animate-spin mb-4 text-brand-indigo dark:text-brand-indigo-light" />
-            <p className="font-medium">Loading your sheets...</p>
+            <p className="font-medium">Loading your archived sheets...</p>
           </div>
-        ) : sheets.length === 0 ? (
+        ) : sortedSheets.length === 0 ? (
           <div className="py-20 glass-panel rounded-2xl flex flex-col items-center justify-center text-center px-4">
             <div className="w-20 h-20 bg-white/50 dark:bg-[#111] backdrop-blur-sm rounded-full flex items-center justify-center mb-5 border border-white/60 dark:border-white/20">
-              <FileSpreadsheet className="w-10 h-10 text-brand-indigo dark:text-brand-indigo-light" />
+              <Archive className="w-10 h-10 text-brand-indigo dark:text-brand-indigo-light" />
             </div>
-            <h3 className="text-xl font-bold text-ink dark:text-white mb-2">No Sheets Imported</h3>
+            <h3 className="text-xl font-bold text-ink dark:text-white mb-2">No Archived Sheets</h3>
             <p className="text-ink-secondary dark:text-white/70 font-medium max-w-md">
-              Paste one or more Google Sheet URLs above and click "Import Sheets" to begin tracking your classes.
+              You haven't moved any sheets to the previous year resources yet.
             </p>
           </div>
         ) : (

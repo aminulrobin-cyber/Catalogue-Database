@@ -33,7 +33,7 @@ export default function RootLayout({
       className={`${poppins.variable} ${hindSiliguri.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans text-ink dark:text-white bg-[linear-gradient(-45deg,#fafafa,#f4f4f5,#e4e4e7,#fafafa)] dark:bg-none dark:bg-[#211832] bg-[length:400%_400%] animate-[gradientBG_15s_ease_infinite] selection:bg-magenta-light selection:text-magenta-dark">
+      <body className="min-h-full flex flex-col font-sans text-ink dark:text-white bg-[linear-gradient(-45deg,#fafafa,#f4f4f5,#e4e4e7,#fafafa)] dark:bg-none dark:bg-[#111111] bg-[length:400%_400%] animate-[gradientBG_15s_ease_infinite] selection:bg-magenta-light selection:text-magenta-dark">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             {children}
